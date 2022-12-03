@@ -61,6 +61,10 @@ public:
         shaders.emplace_back(shader);
     }
 
+    GLuint GetId() const {
+        return programId;
+    }
+
 private:
     std::vector<SP<Shader>> shaders;
     GLuint programId;

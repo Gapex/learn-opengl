@@ -1,4 +1,4 @@
-#pragma
+#pragma once
 
 #include <array>
 
@@ -12,6 +12,10 @@ public:
     }
 
     VecN(T x, T y, T z) : mData{x, y, z} {
+        
+    }
+
+    VecN(T x, T y, T z, T w) : mData{x, y, z, w} {
         
     }
 
@@ -35,3 +39,4 @@ public:
 };
 
 using Vertex = VecN<float, 3>;
+using Vec4f = VecN<float, 4>;

@@ -15,9 +15,15 @@
 
 static Color4f color_bg(0.3, 0.3, .3, 1);
 static size_t g_clock = 0;
-static size_t frameFreq = 30;
+static size_t frameFreq = 60;
 static Size<size_t> winSize(800, 800);
 static Triangle triangle({ Vertex(-.5f, -.5f, 0), Vertex(.5f, -.5f, 0), Vertex(0, .5f, 0) });
+static Triangle triangle2({
+    Vertex(+.5f, +.5f, .0f), //右上角
+    Vertex(+.5f, -.5f, .0f), //右下角
+    Vertex(-.5f, -.5f, .0f), //左下角
+    Vertex(-.5f, +.5f, .0f)  //左上角
+});
 static Program program;
 static SP<VertexBuffer> vertexBuf;
 
@@ -35,6 +41,9 @@ void updateClock()
 
 void init()
 {
+    int avaiableVertexAttribsCnt = -1;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &avaiableVertexAttribsCnt);
+    std::cout << "可用顶点属性数量" << avaiableVertexAttribsCnt << std::endl;
     SP<Shader> vertexShader(new Shader(GL_VERTEX_SHADER, "../glsl/vertex.glsl"));
     if (!vertexShader->Init()) {
         exit(-1);
@@ -59,33 +68,15 @@ void onDrawFrame()
     glClear(GL_COLOR_BUFFER_BIT);
     program.Activate();
     if (!vertexBuf) {
-        vertexBuf = std::make_shared<VertexBuffer>();
+        vertexBuf = std::make_shared<VertexBuffer>(program.GetId());
     }
-        float vertices[] = {
-        -0.5f, -0.5f, 0.0f, // left  
-         0.5f, -0.5f, 0.0f, // right 
-         0.0f,  0.5f, 0.0f  // top   
-    }; 
-
-    unsigned int VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, dataLen, data, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
-
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-    glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    vertexBuf->Clear();
+    vertexBuf->AddVertexes(triangle2.GetData());
+    vertexBuf->AddIndices({0, 1, 2, 0, 2, 3});
+    vertexBuf->SetTime(glfwGetTime());
+    vertexBuf->Write();
+    vertexBuf->Draw();
 }
 
 int main()
