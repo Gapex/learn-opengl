@@ -10,7 +10,7 @@ uniform float timestamp;
 
 void main()
 {
-    gl_Position = vec4(aPos.x + (sin(timestamp) / 2), aPos.y + cos(timestamp) / 2, aPos.z, 1.0);
+    gl_Position = vec4(aPos.x + (sin(timestamp) / 2), aPos.y, aPos.z, 1.0);
     if (aPos.x > 0) {
         vertexColor = vec4(0.3, 0.6, 0.45, 1.0);
     } else {
