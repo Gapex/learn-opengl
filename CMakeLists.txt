@@ -12,6 +12,11 @@ include_directories(${GLAD_DIR}/include)
 set(GLAD_SRC ${GLAD_DIR}/src/glad.c)
 # set up glad end
 
+# set up stb_image
+set(STB_IMG_DIR ${OPEN_SOURCE_DIR}/stb-image)
+include_directories(${STB_IMG_DIR})
+add_definitions(-DSTB_IMAGE_IMPLEMENTATION)
+# set up stb_image end
 include_directories(/opt/homebrew/include)
 
 link_directories(/opt/homebrew/lib)

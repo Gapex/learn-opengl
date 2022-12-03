@@ -12,6 +12,7 @@
 #include "Size.hpp"
 #include "Triangle.hpp"
 #include "VertexBuffer.hpp"
+#include "stb_image.h"
 
 static Color4f color_bg(0.3, 0.3, .3, 1);
 static size_t g_clock = 0;
@@ -27,6 +28,7 @@ static Triangle triangle2({
 });
 static Program program;
 static SP<VertexBuffer> vertexBuf;
+static GLuint ourTexture;
 
 void processInput(GLFWwindow *win) {
   if (glfwGetKey(win, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
@@ -60,6 +62,28 @@ void init() {
   if (!program.Init()) {
     exit(-1);
   }
+  glGenTextures(1, &ourTexture);
+  glBindTexture(GL_TEXTURE_2D, ourTexture);
+  //设置纹理环绕方式
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  //设置采样方式
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                  GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                  GL_LINEAR_MIPMAP_LINEAR);
+  //加载纹理
+  int width, height, channel;
+  const unsigned char *texData =
+      stbi_load("../texture/wall.jpg", &width, &height, &channel, 0);
+  if (!texData) {
+    std::cerr << "load texture data failed" << std::endl;
+    exit(-1);
+  }
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+               GL_UNSIGNED_BYTE, texData);
+  glGenerateMipmap(GL_TEXTURE_2D);
+  stbi_image_free((void *)texData);
 }
 
 void onDrawFrame() {
@@ -72,10 +96,17 @@ void onDrawFrame() {
   }
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   vertexBuf->Clear();
-  vertexBuf->AddVertexes(triangle2.GetData());
+  vertexBuf->AddVertexes({
+      // positions        // texture coords
+      +0.5f, +0.5f, 0.0f, 1.0f, 1.0f, // top right
+      +0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // bottom right
+      -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
+      -0.5f, +0.5f, 0.0f, 0.0f, 1.0f  // top left
+  });
   vertexBuf->AddIndices({0, 1, 2, 0, 2, 3});
   vertexBuf->SetTime(glfwGetTime());
   vertexBuf->Write();
+  glBindTexture(GL_TEXTURE_2D, ourTexture);
   vertexBuf->Draw();
 }
 
