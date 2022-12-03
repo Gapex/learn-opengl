@@ -3,7 +3,7 @@
 #include <glad/glad.h>
 #include <vector>
 
-#include "VecN.hpp"
+#include "VecND.hpp"
 
 class VertexBuffer {
 public:
