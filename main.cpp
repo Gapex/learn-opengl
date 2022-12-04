@@ -14,6 +14,8 @@
 #include "VertexBuffer.hpp"
 #include "stb_image.h"
 
+#include <glm/vec3.hpp>
+
 static Color4f color_bg(0.3, 0.3, .3, 1);
 static size_t g_clock = 0;
 static size_t frameFreq = 60;

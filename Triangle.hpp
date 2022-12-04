@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VecND.hpp"
+#include "Vec3D.hpp"
 #include <vector>
 
 class Triangle {

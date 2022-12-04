@@ -19,6 +19,11 @@ add_definitions(-DSTB_IMAGE_IMPLEMENTATION)
 # set up stb_image end
 include_directories(/opt/homebrew/include)
 
+# set up glm
+set(GLM_DIR ${OPEN_SOURCE_DIR}/glm)
+include_directories(${GLM_DIR}/glm)
+# set up end glm
+
 link_directories(/opt/homebrew/lib)
 
 add_executable(main main.cpp ${GLAD_SRC})
