@@ -14,11 +14,15 @@
 #include "VertexBuffer.hpp"
 #include "stb_image.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/vec3.hpp>
 
+static float screenWidth = 1;
+static float screenHeight = 1;
 static Color4f color_bg(0.3, 0.3, .3, 1);
 static size_t g_clock = 0;
-static size_t frameFreq = 60;
+static size_t frameFreq = 120;
 static Size<size_t> winSize(800, 800);
 static Triangle triangle({Vertex(-.5f, -.5f, 0), Vertex(.5f, -.5f, 0),
                           Vertex(0, .5f, 0)});
@@ -31,10 +35,21 @@ static Triangle triangle2({
 static Program program;
 static SP<VertexBuffer> vertexBuf;
 static GLuint ourTexture, ourTexture2;
+glm::mat4 view(1.0);
+glm::vec3 viewPos(0.0f, 0.0f, -3.0f);
 
 void processInput(GLFWwindow *win) {
   if (glfwGetKey(win, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(win, true);
+  }
+  if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS) {
+    viewPos.z -= 0.04;
+  } else if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) {
+    viewPos.x -= 0.04;
+  } else if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS) {
+    viewPos.x += 0.04;
+  } else if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS) {
+    viewPos.z += 0.04;
   }
 }
 
@@ -121,6 +136,7 @@ void init() {
   glActiveTexture(GL_TEXTURE1);
   LoadTexture(ourTexture2, "../texture/awesomeface.png", GL_RGBA);
   // bind textures on corresponding texture units
+  view = glm::translate(view, viewPos);
 }
 
 void onDrawFrame() {
@@ -132,6 +148,18 @@ void onDrawFrame() {
   if (!vertexBuf) {
     vertexBuf = std::make_shared<VertexBuffer>(program.GetId());
   }
+  glm::mat4 model(1.0);
+  model = glm::rotate(model, glm::radians(-55.0f * sinf(glfwGetTime())),
+                      glm::vec3(1.0f, 0.0f, .0f));
+
+  view = glm::mat4(1.0);
+  view = glm::translate(view, viewPos);
+
+  glm::mat4 projection(1.0f);
+  projection = glm::perspective(glm::radians(45.0f), screenWidth / screenHeight,
+                                0.1f, 100.0f);
+  glm::mat4 mvp = projection * view * model;
+
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   vertexBuf->Clear();
   vertexBuf->AddVertexes({
@@ -146,6 +174,8 @@ void onDrawFrame() {
   vertexBuf->Write();
   glUniform1i(glGetUniformLocation(program.GetId(), "ourTexture"), 0);
   glUniform1i(glGetUniformLocation(program.GetId(), "ourTexture2"), 1);
+  glad_glUniformMatrix4fv(glGetUniformLocation(program.GetId(), "trans"), 1,
+                          GL_FALSE, glm::value_ptr(mvp));
   vertexBuf->Draw();
 }
 
@@ -167,6 +197,8 @@ int main() {
   glfwSetFramebufferSizeCallback(win,
                                  [](GLFWwindow *win, int width, int height) {
                                    glViewport(0, 0, width, height);
+                                   screenWidth = width;
+                                   screenHeight = height;
                                  });
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
