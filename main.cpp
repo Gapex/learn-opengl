@@ -32,6 +32,32 @@ static Triangle triangle2({
     Vertex(-.5f, -.5f, .0f), // 左下角
     Vertex(-.5f, +.5f, .0f)  // 左上角
 });
+
+static float cube[] = {
+    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
+    0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+    -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+
+    -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+    0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+    -0.5f, 0.5f,  0.5f,  0.0f, 1.0f, -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,
+
+    -0.5f, 0.5f,  0.5f,  1.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+    -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  0.5f,  1.0f, 0.0f,
+
+    0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+    0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 0.0f, 1.0f,
+    0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+    -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 1.0f,
+    0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, 0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+    -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+
+    -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+    0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f};
+
 static Program program;
 static SP<VertexBuffer> vertexBuf;
 static GLuint ourTexture, ourTexture2;
@@ -43,13 +69,16 @@ void processInput(GLFWwindow *win) {
     glfwSetWindowShouldClose(win, true);
   }
   if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS) {
-    viewPos.z -= 0.04;
-  } else if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) {
-    viewPos.x -= 0.04;
-  } else if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS) {
-    viewPos.x += 0.04;
-  } else if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS) {
     viewPos.z += 0.04;
+  }
+  if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) {
+    viewPos.x += 0.04;
+  }
+  if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS) {
+    viewPos.x -= 0.04;
+  }
+  if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS) {
+    viewPos.z -= 0.04;
   }
 }
 
@@ -135,6 +164,7 @@ void init() {
   glGenTextures(1, &ourTexture2);
   glActiveTexture(GL_TEXTURE1);
   LoadTexture(ourTexture2, "../texture/awesomeface.png", GL_RGBA);
+  glEnable(GL_DEPTH_TEST);
   // bind textures on corresponding texture units
   view = glm::translate(view, viewPos);
 }
@@ -142,35 +172,32 @@ void init() {
 void onDrawFrame() {
   // std::cout << "on draw frame..." << g_clock << std::endl;
   glClearColor(color_bg.r(), color_bg.g(), color_bg.b(), color_bg.a());
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   program.Activate();
   if (!vertexBuf) {
     vertexBuf = std::make_shared<VertexBuffer>(program.GetId());
   }
   glm::mat4 model(1.0);
-  model = glm::rotate(model, glm::radians(-55.0f * sinf(glfwGetTime())),
+  model = glm::rotate(model, glm::radians(180.0f * sinf(glfwGetTime())),
                       glm::vec3(1.0f, 0.0f, .0f));
+  model = glm::rotate(model, glm::radians(90.0f * sinf(glfwGetTime())),
+                      glm::vec3(0.0f, 1.0f, .0f));
 
   view = glm::mat4(1.0);
   view = glm::translate(view, viewPos);
 
   glm::mat4 projection(1.0f);
-  projection = glm::perspective(glm::radians(45.0f), screenWidth / screenHeight,
+  projection = glm::perspective(glm::radians(70.0f), screenWidth / screenHeight,
                                 0.1f, 100.0f);
   glm::mat4 mvp = projection * view * model;
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   vertexBuf->Clear();
-  vertexBuf->AddVertexes({
-      // positions        // texture coords
-      +0.5f, +0.5f, 0.0f, 0.0f, 1.0f, // top left
-      +0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
-      -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // bottom right
-      -0.5f, +0.5f, 0.0f, 1.0f, 1.0f  // top right
-  });
-  vertexBuf->AddIndices({0, 1, 3, 1, 2, 3});
+  vertexBuf->AddVertexes(std::vector<float>(std::begin(cube), std::end(cube)));
+  // vertexBuf->AddIndices({0, 1, 3, 1, 2, 3});
   vertexBuf->SetTime(glfwGetTime());
+  vertexBuf->SetVertexCnt(36);
   vertexBuf->Write();
   glUniform1i(glGetUniformLocation(program.GetId(), "ourTexture"), 0);
   glUniform1i(glGetUniformLocation(program.GetId(), "ourTexture2"), 1);

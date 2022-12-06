@@ -60,10 +60,16 @@ public:
 
   void Draw() const {
     Activate();
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
+    if (!indices.empty()) {
+      glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
+    } else {
+      glDrawArrays(GL_TRIANGLES, 0, vertexCnt);
+    }
   }
 
   void SetTime(float newTimeStamp) { timestamp = newTimeStamp; }
+
+  void SetVertexCnt(GLuint vertexCnt) { this->vertexCnt = vertexCnt; }
 
 private:
   GLuint vao;
@@ -71,6 +77,7 @@ private:
   GLuint ebo;
   GLuint programId;
   std::vector<float> data;
+  GLuint vertexCnt = 0;
   std::vector<unsigned int> indices;
   float timestamp;
   GLint timestampUniformLocation;
