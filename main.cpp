@@ -7,6 +7,7 @@
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 
+#include "Camera.h"
 #include "Color.hpp"
 #include "Program.hpp"
 #include "Size.hpp"
@@ -61,24 +62,26 @@ static float cube[] = {
 static Program program;
 static SP<VertexBuffer> vertexBuf;
 static GLuint ourTexture, ourTexture2;
-glm::mat4 view(1.0);
-glm::vec3 viewPos(0.0f, 0.0f, -3.0f);
+static double timeDelta, lastTime;
+static bool firstMouse = true;
+static double lastX, lastY;
+static Camera camera(glm::vec3(0, -3, 10));
 
 void processInput(GLFWwindow *win) {
   if (glfwGetKey(win, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(win, true);
   }
   if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS) {
-    viewPos.z += 0.04;
+    camera.ProcessKeyboard(Camera_Movement::FORWARD, timeDelta);
   }
   if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) {
-    viewPos.x += 0.04;
+    camera.ProcessKeyboard(Camera_Movement::LEFT, timeDelta);
   }
   if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS) {
-    viewPos.x -= 0.04;
+    camera.ProcessKeyboard(Camera_Movement::RIGHT, timeDelta);
   }
   if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS) {
-    viewPos.z -= 0.04;
+    camera.ProcessKeyboard(Camera_Movement::BACKWARD, timeDelta);
   }
 }
 
@@ -166,11 +169,13 @@ void init() {
   LoadTexture(ourTexture2, "../texture/awesomeface.png", GL_RGBA);
   glEnable(GL_DEPTH_TEST);
   // bind textures on corresponding texture units
-  view = glm::translate(view, viewPos);
+  lastTime = glfwGetTime();
 }
 
 void onDrawFrame() {
-  // std::cout << "on draw frame..." << g_clock << std::endl;
+  double currentTime = glfwGetTime();
+  timeDelta = currentTime - lastTime;
+  lastTime = currentTime;
   glClearColor(color_bg.r(), color_bg.g(), color_bg.b(), color_bg.a());
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -184,12 +189,11 @@ void onDrawFrame() {
   model = glm::rotate(model, glm::radians(90.0f * sinf(glfwGetTime())),
                       glm::vec3(0.0f, 1.0f, .0f));
 
-  view = glm::mat4(1.0);
-  view = glm::translate(view, viewPos);
+  auto view = camera.GetViewMatrix();
 
   glm::mat4 projection(1.0f);
-  projection = glm::perspective(glm::radians(70.0f), screenWidth / screenHeight,
-                                0.1f, 100.0f);
+  projection = glm::perspective(glm::radians(camera.Zoom),
+                                screenWidth / screenHeight, 0.1f, 100.0f);
   glm::mat4 mvp = projection * view * model;
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -221,12 +225,28 @@ int main() {
     return -1;
   }
   glfwMakeContextCurrent(win);
+  glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetFramebufferSizeCallback(win,
                                  [](GLFWwindow *win, int width, int height) {
                                    glViewport(0, 0, width, height);
                                    screenWidth = width;
                                    screenHeight = height;
                                  });
+  glfwSetCursorPosCallback(win, [](GLFWwindow *win, double xPos, double yPos) {
+    if (firstMouse) {
+      lastX = xPos;
+      lastY = yPos;
+      firstMouse = false;
+    }
+    camera.ProcessMouseMovement(xPos - lastX, lastY - yPos);
+    lastX = xPos;
+    lastY = yPos;
+  });
+
+  glfwSetScrollCallback(win,
+                        [](GLFWwindow *win, double xOffset, double yOffset) {
+                          camera.ProcessMouseScroll(yOffset);
+                        });
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     std::cerr << "Failed to load GLAD" << std::endl;
