@@ -7,3 +7,7 @@ fi
 if [ ! -d glm ]; then
 git clone https://github.com/g-truc/glm.git
 fi
+
+if [ ! -d glfw ]; then
+  git clone https://github.com/glfw/glfw.git
+fi
