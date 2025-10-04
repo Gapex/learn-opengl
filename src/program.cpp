@@ -14,7 +14,7 @@ bool Program::Init() {
         if (!shader->Check()) {
             return false;
         }
-        glAttachShader(program_id, *shader);
+        glAttachShader(program_id, shader->GetId());
     }
     glLinkProgram(program_id);
     if (Check()) {
@@ -24,7 +24,7 @@ bool Program::Init() {
     return false;
 }
 
-bool Program::Check() const  {
+bool Program::Check() const {
     bool result = true;
     GLint success;
     glGetProgramiv(program_id, GL_LINK_STATUS, &success);
@@ -34,6 +34,8 @@ bool Program::Check() const  {
         glGetProgramInfoLog(program_id, 1024, &infoLen, infoLog);
         LOGD("%s", infoLog);
         result = false;
+    } else {
+        // LOGD("program check pass: id=%d", program_id);
     }
     return result;
 }
@@ -48,12 +50,16 @@ void Program::Append(const std::shared_ptr<Shader> &shader) {
     shaders.emplace_back(shader);
 }
 
-void Program::SetInt(const char *name, int value) const { glUniform1i(glGetUniformLocation(program_id, name), value); }
+void Program::SetInt(const char *name, int value) const {
+    glUniform1i(glGetUniformLocation(program_id, name), value);
+}
 
 void Program::SetMat4(const char *name, const glm::mat4 &mat) const {
     glUniformMatrix4fv(glGetUniformLocation(program_id, name), 1, GL_FALSE, glm::value_ptr(mat));
 }
 
-void Program::SetFloat(const char *name, float value) const { glUniform1f(glGetUniformLocation(program_id, name), value); }
+void Program::SetFloat(const char *name, float value) const {
+    glUniform1f(glGetUniformLocation(program_id, name), value);
+}
 
 

@@ -15,13 +15,11 @@ class Program {
 
     bool Check() const;
 
-    void Activate() const ;
+    void Activate() const;
 
     void Append(const std::shared_ptr<Shader> &shader);
 
-    GLuint GetId() const {
-      return program_id;
-  }
+    GLuint GetId() const { return program_id; }
 
     void SetInt(const char *name, int value) const;
 

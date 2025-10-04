@@ -1,6 +1,9 @@
 #include "gl_app.h"
+
+#include "line_vertex_buffer.h"
 #include "log.h"
 #include "stb_image.h"
+#include "triangle_vertex_buffer.h"
 
 #include <chrono>
 #include <cmath>
@@ -39,7 +42,8 @@ void GLApp::scroll_callback(GLFWwindow *window, double, double yoffset) {
     }
 }
 
-GLApp::GLApp(WindowInfo window_info) : window_info(window_info), camera(glm::vec3{0, 0, 3}, glm::vec3(0, 1, 0), YAW, PITCH) {
+GLApp::GLApp(WindowInfo window_info)
+    : window_info(window_info), camera(glm::vec3{0, 0, 3}, glm::vec3(0, 1, 0), YAW, PITCH) {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
@@ -114,8 +118,8 @@ void GLApp::run() {
     }
 }
 
-void GLApp::LoadTexture(GLuint &textureId, const char *filename, GLuint imgFormat) {
-    glBindTexture(GL_TEXTURE_2D, textureId);
+void GLApp::LoadTexture(const GLuint &texture_id, const char *filename, GLuint img_format) {
+    glBindTexture(GL_TEXTURE_2D, texture_id);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
                     GL_REPEAT); // set texture wrapping to GL_REPEAT (default
                                 // wrapping method)
@@ -127,7 +131,7 @@ void GLApp::LoadTexture(GLuint &textureId, const char *filename, GLuint imgForma
     stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
     unsigned char *data = stbi_load(filename, &width, &height, &nrChannels, 0);
     if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, imgFormat, width, height, 0, imgFormat, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, img_format, width, height, 0, img_format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
     } else {
         LOGE("Failed to load texture: %s", filename);
@@ -136,25 +140,32 @@ void GLApp::LoadTexture(GLuint &textureId, const char *filename, GLuint imgForma
 }
 
 void GLApp::Init() {
-    int availableVertexAttribsCnt = -1;
-    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &availableVertexAttribsCnt);
-    LOGD("available vertices count: %d", availableVertexAttribsCnt);
+    int available_vertex_cnt = -1;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &available_vertex_cnt);
+    LOGD("available vertices count: %d", available_vertex_cnt);
     std::shared_ptr<Shader> vertexShader(new Shader(GL_VERTEX_SHADER, PROJECT_DIR "glsl/vertex.glsl"));
     if (!vertexShader->Init()) {
         LOGE("Failed to initialize vertex shader");
         return;
     }
-    program.Append(vertexShader);
+    cube_program.Append(vertexShader);
 
     std::shared_ptr<Shader> frag_shader(new Shader(GL_FRAGMENT_SHADER, PROJECT_DIR "glsl/fragment.glsl"));
     if (!frag_shader->Init()) {
         LOGE("Failed to initialize fragment shader");
         return;
     }
-    program.Append(frag_shader);
+    cube_program.Append(frag_shader);
 
-    if (!program.Init()) {
-        LOGE("Failed to initialize program");
+    coord_program.Append(std::make_shared<Shader>(GL_VERTEX_SHADER, PROJECT_DIR "glsl/line.vertex.glsl"));
+    coord_program.Append(std::make_shared<Shader>(GL_FRAGMENT_SHADER, PROJECT_DIR "glsl/line.frag.glsl"));
+
+    if (!cube_program.Init()) {
+        LOGE("Failed to initialize cube program");
+        return;
+    }
+    if (!coord_program.Init()) {
+        LOGE("Failed to initialize line program");
         return;
     }
     glGenTextures(1, &ourTexture);
@@ -174,27 +185,42 @@ void GLApp::onDrawFrame() {
     glClearColor(color_bg.x, color_bg.y, color_bg.z, color_bg.w);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    program.Activate();
-    if (!vertex_buf) {
-        vertex_buf = std::make_shared<VertexBuffer>(program.GetId());
+    if (!cube_vertex_buffer) {
+        cube_vertex_buffer = std::make_shared<TriangleVertexBuffer>(cube_program.GetId());
     }
-    glm::mat4 model(1.0);
-    //model = glm::rotate(model, glm::radians(180.0f * sinf(currentTime)), glm::vec3(1.0f, 0.0f, .0f));
-    //model = glm::rotate(model, glm::radians(90.0f * sinf(currentTime)), glm::vec3(0.0f, 1.0f, .0f));
+    if (!coordinates_vertex_buffer) {
+        coordinates_vertex_buffer = std::make_shared<LineVertexBuffer>(coord_program.GetId(), 3.0f);
+    }
 
-
-    glm::mat4 projection =
+    const glm::mat4 projection =
         glm::perspective(glm::radians(camera.zoom), window_info.width * 1.0f / window_info.height, 0.1f, 1000.0f);
-    glm::mat4 mvp = projection * camera.GetViewMatrix() * model;
+    const glm::mat4 view = camera.GetViewMatrix();
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    vertex_buf->Clear();
-    vertex_buf->AddVertexes(cube);
-    vertex_buf->SetTime(currentTime);
-    vertex_buf->SetVertexCnt(36);
-    vertex_buf->Write();
-    program.SetInt("boxTexture", 0);
-    program.SetInt("faceTexture", 1);
-    program.SetMat4("trans", mvp);
-    vertex_buf->Draw();
+    coord_program.Activate();
+    coordinates_vertex_buffer->Clear();
+    coordinates_vertex_buffer->AddVertexes(coordinates);
+    coordinates_vertex_buffer->SetTime(currentTime);
+    coordinates_vertex_buffer->SetVertexCnt(6);
+    coordinates_vertex_buffer->Write();
+    coord_program.SetMat4("trans", projection * view);
+    coordinates_vertex_buffer->Draw();
+
+    cube_program.Activate();
+    cube_vertex_buffer->Clear();
+    cube_vertex_buffer->AddVertexes(cube);
+    cube_vertex_buffer->SetTime(currentTime);
+    cube_vertex_buffer->SetVertexCnt(36);
+    cube_vertex_buffer->Write();
+    cube_program.SetInt("boxTexture", 0);
+    cube_program.SetInt("faceTexture", 1);
+
+    for (size_t i = 0; i < cubePositions.size(); i++) {
+        glm::mat4 model(1.0f);
+        float angle = 20.0f * static_cast<float>(i);
+        model = glm::translate(model, cubePositions.at(i));
+        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+        glm::mat4 mvp = projection * view * model;
+        cube_program.SetMat4("trans", mvp);
+        cube_vertex_buffer->Draw();
+    }
 }

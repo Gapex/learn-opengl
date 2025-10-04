@@ -23,11 +23,13 @@ class Shader {
 
     bool IsInitialized() const { return initialized; }
 
+    GLuint GetId() const { return shader_id; }
+
   private:
     bool GetShaderSource();
 
-    std::string src;
-    GLuint shader_id;
-    GLenum shader_type;
-    bool initialized = false;
+    std::string src{};
+    GLuint shader_id{};
+    GLenum shader_type{};
+    bool initialized{false};
 };

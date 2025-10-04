@@ -3,6 +3,7 @@
 Shader::Shader(GLenum shaderType, const std::string &src) : src(src), shader_id(0), shader_type(shaderType) {}
 
 Shader::~Shader() {
+    LOGD("shader delete: type=%d, id=%d", shader_type, shader_id);
     glDeleteShader(shader_id);
 }
 
@@ -33,6 +34,8 @@ bool Shader::Check() const {
         glGetShaderInfoLog(shader_id, 1024, nullptr, infoLog);
         LOGE("%s\n%s", src.c_str(), infoLog);
         result = false;
+    } else {
+        LOGD("shader check pass, type=%d, id=%d", shader_type, shader_id);
     }
     return result;
 }
