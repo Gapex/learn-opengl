@@ -5,9 +5,11 @@ layout (location = 1) in vec4 aColor;
 
 out vec4 vertexColor;
 
-uniform mat4 trans;
+uniform mat4 modelMat;
+uniform mat4 viewMat;
+uniform mat4 projMat;
 
 void main() {
-    gl_Position = trans * vec4(aPos, 1.0f);
+    gl_Position = (projMat * viewMat * modelMat) * vec4(aPos, 1.0f);
     vertexColor = aColor;
 }

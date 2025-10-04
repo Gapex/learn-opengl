@@ -27,6 +27,8 @@ class Program {
 
     void SetFloat(const char *name, float value) const;
 
+    void SetVec3(const char *name, glm::vec3 value) const;
+
   private:
     std::vector<std::shared_ptr<Shader>> shaders{};
     GLuint program_id{};

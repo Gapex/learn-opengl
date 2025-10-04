@@ -43,7 +43,7 @@ void GLApp::scroll_callback(GLFWwindow *window, double, double yoffset) {
 }
 
 GLApp::GLApp(WindowInfo window_info)
-    : window_info(window_info), camera(glm::vec3{0, 0, 3}, glm::vec3(0, 1, 0), YAW, PITCH) {
+    : window_info(window_info), camera(glm::vec3{1, 1, 3}, glm::vec3(0, 1, 0), YAW, PITCH) {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
@@ -191,6 +191,9 @@ void GLApp::onDrawFrame() {
     if (!coordinates_vertex_buffer) {
         coordinates_vertex_buffer = std::make_shared<LineVertexBuffer>(coord_program.GetId(), 3.0f);
     }
+    if (!light_vertex_buffer) {
+        light_vertex_buffer = std::make_shared<TriangleVertexBuffer>(cube_program.GetId());
+    }
 
     const glm::mat4 projection =
         glm::perspective(glm::radians(camera.zoom), window_info.width * 1.0f / window_info.height, 0.1f, 1000.0f);
@@ -202,25 +205,48 @@ void GLApp::onDrawFrame() {
     coordinates_vertex_buffer->SetTime(currentTime);
     coordinates_vertex_buffer->SetVertexCnt(coordinates.size());
     coordinates_vertex_buffer->Write();
-    coord_program.SetMat4("trans", projection * view);
+    coord_program.SetMat4("modelMat", glm::mat4(1.0f));
+    coord_program.SetMat4("viewMat", camera.GetViewMatrix());
+    coord_program.SetMat4("projMat", projection);
     coordinates_vertex_buffer->Draw();
 
+    const int colorMode = 4;
     cube_program.Activate();
     cube_vertex_buffer->Clear();
     cube_vertex_buffer->AddVertexes(cube);
     cube_vertex_buffer->SetTime(currentTime);
     cube_vertex_buffer->SetVertexCnt(36);
     cube_vertex_buffer->Write();
+    cube_program.SetInt("colorMode", colorMode);
     cube_program.SetInt("boxTexture", 0);
     cube_program.SetInt("faceTexture", 1);
+    cube_program.SetMat4("viewMat", camera.GetViewMatrix());
+    cube_program.SetMat4("projMat", projection);
+    cube_program.SetVec3("lightPos", lightPosition);
+    cube_program.SetVec3("viewPos", camera.position);
 
     for (size_t i = 0; i < cubePositions.size(); i++) {
         glm::mat4 model(1.0f);
         float angle = 20.0f * static_cast<float>(i);
         model = glm::translate(model, cubePositions.at(i));
         model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-        glm::mat4 mvp = projection * view * model;
-        cube_program.SetMat4("trans", mvp);
+        cube_program.SetMat4("modelMat", model);
         cube_vertex_buffer->Draw();
     }
+    light_vertex_buffer->Clear();
+    light_vertex_buffer->AddVertexes(light_cube);
+    light_vertex_buffer->SetTime(currentTime);
+    light_vertex_buffer->SetVertexCnt(36);
+    light_vertex_buffer->Write();
+    if (colorMode == 4) {
+        cube_program.SetVec3("lightColor", lightColor);
+    }
+    {
+        glm::mat4 model(1.0f);
+        model = glm::translate(model, lightPosition);
+        model = glm::scale(model, glm::vec3(0.1f));
+        cube_program.SetMat4("modelMat", model);
+        cube_program.SetInt("colorMode", 0);
+    }
+    light_vertex_buffer->Draw();
 }

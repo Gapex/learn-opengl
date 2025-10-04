@@ -62,4 +62,6 @@ void Program::SetFloat(const char *name, float value) const {
     glUniform1f(glGetUniformLocation(program_id, name), value);
 }
 
-
+void Program::SetVec3(const char *name, glm::vec3 value) const {
+    glUniform3f(glGetUniformLocation(program_id, name), value.x, value.y, value.z);
+}
