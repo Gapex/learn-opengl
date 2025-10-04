@@ -11,7 +11,7 @@
 
 class GLApp {
   public:
-    GLApp();
+    GLApp(WindowInfo window_info);
     ~GLApp();
     void run();
 
@@ -26,8 +26,6 @@ class GLApp {
 
     void UpdateClock();
 
-    void LoadTexture(GLuint &textureId, const char *filename);
-
     void LoadTexture(GLuint &textureId, const char *filename, GLuint imgFormat);
 
     void Init();
@@ -37,7 +35,7 @@ class GLApp {
   private:
     const glm::vec4 color_bg{0.3f, 0.3f, 0.3f, 1.0f};
     size_t g_clock = 0;
-    size_t frame_freq = 120;
+    size_t frame_freq = 60;
     WindowInfo window_info;
     GLFWwindow *win{};
 

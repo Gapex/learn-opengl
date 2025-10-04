@@ -39,15 +39,12 @@ void GLApp::scroll_callback(GLFWwindow *window, double, double yoffset) {
     }
 }
 
-GLApp::GLApp() : camera(glm::vec3{0, 0, 3}, glm::vec3(0, 1, 0), YAW, PITCH) {
+GLApp::GLApp(WindowInfo window_info) : window_info(window_info), camera(glm::vec3{0, 0, 3}, glm::vec3(0, 1, 0), YAW, PITCH) {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    window_info.width = 2560;
-    window_info.height = 1440;
-    window_info.title = "Learning OpenGL";
 
     win = glfwCreateWindow(window_info.width, window_info.height, window_info.title.c_str(), nullptr, nullptr);
     if (win == nullptr) {
@@ -110,35 +107,11 @@ void GLApp::UpdateClock() {
 void GLApp::run() {
     while (!glfwWindowShouldClose(win)) {
         ProcessInput(win);
-
         UpdateClock();
         onDrawFrame();
-
         glfwPollEvents();
         glfwSwapBuffers(win);
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000 / frame_freq));
     }
-}
-
-void GLApp::LoadTexture(GLuint &textureId, const char *filename) {
-    glBindTexture(GL_TEXTURE_2D, textureId);
-    // 设置纹理环绕方式
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // 设置采样方式
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // 加载纹理
-    int width, height, channel;
-    stbi_set_flip_vertically_on_load(true);
-    const unsigned char *texData = stbi_load(filename, &width, &height, &channel, 0);
-    if (!texData) {
-        LOGE("load texture data failed");
-        exit(-1);
-    }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texData);
-    glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 void GLApp::LoadTexture(GLuint &textureId, const char *filename, GLuint imgFormat) {
@@ -165,7 +138,7 @@ void GLApp::LoadTexture(GLuint &textureId, const char *filename, GLuint imgForma
 void GLApp::Init() {
     int availableVertexAttribsCnt = -1;
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &availableVertexAttribsCnt);
-    LOGD("可用顶点属性数量: %d", availableVertexAttribsCnt);
+    LOGD("available vertices count: %d", availableVertexAttribsCnt);
     std::shared_ptr<Shader> vertexShader(new Shader(GL_VERTEX_SHADER, "../glsl/vertex.glsl"));
     if (!vertexShader->Init()) {
         LOGE("Failed to initialize vertex shader");
@@ -209,11 +182,10 @@ void GLApp::onDrawFrame() {
     model = glm::rotate(model, glm::radians(180.0f * sinf(currentTime)), glm::vec3(1.0f, 0.0f, .0f));
     model = glm::rotate(model, glm::radians(90.0f * sinf(currentTime)), glm::vec3(0.0f, 1.0f, .0f));
 
-    auto view = camera.GetViewMatrix();
 
     glm::mat4 projection =
         glm::perspective(glm::radians(camera.zoom), window_info.width * 1.0f / window_info.height, 0.1f, 1000.0f);
-    glm::mat4 mvp = projection * view * model;
+    glm::mat4 mvp = projection * camera.GetViewMatrix() * model;
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     vertex_buf->Clear();

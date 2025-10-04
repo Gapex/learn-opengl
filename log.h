@@ -15,12 +15,12 @@ inline std::string GetFileName(const std::filesystem::path &path) {
 
 #define LOGD(fmt, ...)                                                                                                 \
     do {                                                                                                               \
-        fprintf(stdout, "[D] [%s:%d %s]" fmt "\n", GetFileName(__FILE__).c_str(), __LINE__, __func__, ##__VA_ARGS__);                  \
+        fprintf(stdout, "[D][%s:%d %s] " fmt "\n", GetFileName(__FILE__).c_str(), __LINE__, __func__, ##__VA_ARGS__);  \
     } while (0)
 
 #define LOGE(fmt, ...)                                                                                                 \
     do {                                                                                                               \
-        fprintf(stderr, "[E] [%s:%d %s]" fmt "\n", GetFileName(__FILE__).c_str(), __LINE__, __func__, ##__VA_ARGS__);                  \
+        fprintf(stderr, "[E][%s:%d %s] " fmt "\n", GetFileName(__FILE__).c_str(), __LINE__, __func__, ##__VA_ARGS__);  \
     } while (0)
 
 #endif // LEARN_OPENGL_LOG_H
