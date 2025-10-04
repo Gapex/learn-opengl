@@ -64,14 +64,14 @@ class GLApp {
                                          glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
 
     std::vector<float> coordinates{
-        -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // X-axis, red
-        +1000.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // X-axis, red
+        -1.0f,    0.0f,     0.0f,     1.0f, 0.0f, 0.0f, 0.0f, // X-axis, red
+        +1000.0f, 0.0f,     0.0f,     1.0f, 0.0f, 0.0f, 1.0f, // X-axis, red
 
-        0.0f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // Y-axis, green
-        0.0f, +1000.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Y-axis, green
+        0.0f,     -1.0f,    0.0f,     0.0f, 1.0f, 0.0f, 0.0f, // Y-axis, green
+        0.0f,     +1000.0f, 0.0f,     0.0f, 1.0f, 0.0f, 1.0f, // Y-axis, green
 
-        0.0f, 0.0f, -0.5f, 0.0f, 0.0f, 1.0f, // Z-axis, blue
-        0.0f, 0.0f, +1000.0f, 0.0f, 0.0f, 1.0f, // Z-axis, blue
+        0.0f,     0.0f,     -1.0f,    0.0f, 0.0f, 1.0f, 0.0f, // Z-axis, blue
+        0.0f,     0.0f,     +1000.0f, 0.0f, 0.0f, 1.0f, 1.0f, // Z-axis, blue
     };
     Program cube_program{}, coord_program{};
     std::shared_ptr<VertexBuffer> cube_vertex_buffer{};

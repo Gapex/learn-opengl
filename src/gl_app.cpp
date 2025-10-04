@@ -200,7 +200,7 @@ void GLApp::onDrawFrame() {
     coordinates_vertex_buffer->Clear();
     coordinates_vertex_buffer->AddVertexes(coordinates);
     coordinates_vertex_buffer->SetTime(currentTime);
-    coordinates_vertex_buffer->SetVertexCnt(6);
+    coordinates_vertex_buffer->SetVertexCnt(coordinates.size());
     coordinates_vertex_buffer->Write();
     coord_program.SetMat4("trans", projection * view);
     coordinates_vertex_buffer->Draw();
