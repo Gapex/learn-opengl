@@ -8,16 +8,17 @@ Shader::~Shader() {
 
 bool Shader::Init() {
     if (initialized) {
-        LOGD("initialized shader: %d", shader_id);
+        LOGE("initialized shader: %d", shader_id);
         return false;
     }
     initialized = true;
     shader_id = glCreateShader(shader_type);
     if (!GetShaderSource()) {
+        LOGE("failed to load shader: %s", src.c_str());
         return false;
     }
     const char *srcData = src.data();
-    LOGD("src: %s", srcData);
+    LOGD("src:\n%s", srcData);
     glShaderSource(shader_id, 1, &srcData, nullptr);
     glCompileShader(shader_id);
     return Check();

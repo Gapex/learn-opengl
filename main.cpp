@@ -1,4 +1,4 @@
-#include "GLApp.h"
+#include "gl_app.h"
 
 int main() {
     GLApp app;

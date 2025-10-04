@@ -6,7 +6,6 @@
 #include "GLFW/glfw3.h"
 #include "camera.h"
 #include "vertex_buffer.hpp"
-#include "glm/gtc/type_ptr.hpp"
 #include "program.hpp"
 #include "window_info.h"
 

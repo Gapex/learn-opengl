@@ -36,11 +36,12 @@ link_directories(/opt/homebrew/lib)
 add_executable(main main.cpp
         ${GLAD_SRC}
         ${GLFW_SRCS}
-        GLApp.cpp
+        gl_app.cpp
         program.cpp
         shader.cpp
 )
-target_link_libraries(main GL glfw pthread X11 dl Xi)
+#target_link_libraries(main GL glfw pthread X11 dl Xi)
+target_link_libraries(main opengl32 glfw )
 
 if (APPLE)
     message(STATUS "Apple = true")

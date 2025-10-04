@@ -1,4 +1,4 @@
-#include "GLApp.h"
+#include "gl_app.h"
 #include "log.h"
 #include "stb_image.h"
 
@@ -41,12 +41,12 @@ void GLApp::scroll_callback(GLFWwindow *window, double, double yoffset) {
 
 GLApp::GLApp() : camera(glm::vec3{0, 0, 3}, glm::vec3(0, 1, 0), YAW, PITCH) {
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    window_info.width = 1280;
-    window_info.height = 720;
+    window_info.width = 2560;
+    window_info.height = 1440;
     window_info.title = "Learning OpenGL";
 
     win = glfwCreateWindow(window_info.width, window_info.height, window_info.title.c_str(), nullptr, nullptr);
@@ -168,13 +168,15 @@ void GLApp::Init() {
     LOGD("可用顶点属性数量: %d", availableVertexAttribsCnt);
     std::shared_ptr<Shader> vertexShader(new Shader(GL_VERTEX_SHADER, "../glsl/vertex.glsl"));
     if (!vertexShader->Init()) {
-        exit(-1);
+        LOGE("Failed to initialize vertex shader");
+        return;
     }
     program.Append(vertexShader);
 
     std::shared_ptr<Shader> frag_shader(new Shader(GL_FRAGMENT_SHADER, "../glsl/fragment.glsl"));
     if (!frag_shader->Init()) {
-        exit(-1);
+        LOGE("Failed to initialize fragment shader");
+        return;
     }
     program.Append(frag_shader);
 
@@ -193,7 +195,7 @@ void GLApp::Init() {
 }
 
 void GLApp::onDrawFrame() {
-    double currentTime = glfwGetTime();
+    const float currentTime = static_cast<float>(glfwGetTime());
     timeDelta = currentTime - lastTime;
     lastTime = currentTime;
     glClearColor(color_bg.x, color_bg.y, color_bg.z, color_bg.w);
@@ -204,24 +206,23 @@ void GLApp::onDrawFrame() {
         vertex_buf = std::make_shared<VertexBuffer>(program.GetId());
     }
     glm::mat4 model(1.0);
-    model = glm::rotate(model, glm::radians(180.0f * sinf(glfwGetTime())), glm::vec3(1.0f, 0.0f, .0f));
-    model = glm::rotate(model, glm::radians(90.0f * sinf(glfwGetTime())), glm::vec3(0.0f, 1.0f, .0f));
+    model = glm::rotate(model, glm::radians(180.0f * sinf(currentTime)), glm::vec3(1.0f, 0.0f, .0f));
+    model = glm::rotate(model, glm::radians(90.0f * sinf(currentTime)), glm::vec3(0.0f, 1.0f, .0f));
 
     auto view = camera.GetViewMatrix();
 
-    glm::mat4 projection(1.0f);
-    projection =
-        glm::perspective(glm::radians(camera.zoom), window_info.width * 1.0f / window_info.height, 0.1f, 100.0f);
+    glm::mat4 projection =
+        glm::perspective(glm::radians(camera.zoom), window_info.width * 1.0f / window_info.height, 0.1f, 1000.0f);
     glm::mat4 mvp = projection * view * model;
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     vertex_buf->Clear();
     vertex_buf->AddVertexes(cube);
-    vertex_buf->SetTime(glfwGetTime());
+    vertex_buf->SetTime(currentTime);
     vertex_buf->SetVertexCnt(36);
     vertex_buf->Write();
-    program.SetInt("ourTexture", 0);
-    program.SetInt("ourTexture2", 1);
+    program.SetInt("boxTexture", 0);
+    program.SetInt("faceTexture", 1);
     program.SetMat4("trans", mvp);
     vertex_buf->Draw();
 }
