@@ -12,6 +12,8 @@ out vec4 FragColor;
 void main()
 {
     // FragColor = vertexColor;
-    float mixture = (cos(timestamp) + 1) / 2.0;
+    float mixture = (sin(timestamp) + 1) / 2.0;
     FragColor = mix(texture(boxTexture, TexCoord), texture(faceTexture, TexCoord), mixture);
+    // FragColor = texture(boxTexture, TexCoord);
+    // FragColor = texture(faceTexture, TexCoord);
 }

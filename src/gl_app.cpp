@@ -78,11 +78,11 @@ void GLApp::ProcessInput(GLFWwindow *win) {
         {GLFW_KEY_W, FORWARD},  {GLFW_KEY_A, LEFT}, {GLFW_KEY_D, RIGHT},
         {GLFW_KEY_S, BACKWARD}, {GLFW_KEY_E, UP},   {GLFW_KEY_C, DOWN},
     };
-    static std::unordered_map<int, std::pair<int, int>> mouseMap{
-        {GLFW_KEY_UP, {0, -1}},
-        {GLFW_KEY_DOWN, {0, +1}},
-        {GLFW_KEY_LEFT, {-1, 0}},
-        {GLFW_KEY_RIGHT, {+1, 0}},
+    static std::unordered_map<int, std::pair<float, float>> mouseMap{
+        {GLFW_KEY_UP, {0.0f, -10.0f}},
+        {GLFW_KEY_DOWN, {0.0f, +10.0f}},
+        {GLFW_KEY_LEFT, {-10.0f, 0.0f}},
+        {GLFW_KEY_RIGHT, {+10.0f, 0.0f}},
     };
     if (glfwGetKey(win, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(win, true);
@@ -139,14 +139,14 @@ void GLApp::Init() {
     int availableVertexAttribsCnt = -1;
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &availableVertexAttribsCnt);
     LOGD("available vertices count: %d", availableVertexAttribsCnt);
-    std::shared_ptr<Shader> vertexShader(new Shader(GL_VERTEX_SHADER, "../glsl/vertex.glsl"));
+    std::shared_ptr<Shader> vertexShader(new Shader(GL_VERTEX_SHADER, PROJECT_DIR "glsl/vertex.glsl"));
     if (!vertexShader->Init()) {
         LOGE("Failed to initialize vertex shader");
         return;
     }
     program.Append(vertexShader);
 
-    std::shared_ptr<Shader> frag_shader(new Shader(GL_FRAGMENT_SHADER, "../glsl/fragment.glsl"));
+    std::shared_ptr<Shader> frag_shader(new Shader(GL_FRAGMENT_SHADER, PROJECT_DIR "glsl/fragment.glsl"));
     if (!frag_shader->Init()) {
         LOGE("Failed to initialize fragment shader");
         return;
@@ -159,10 +159,10 @@ void GLApp::Init() {
     }
     glGenTextures(1, &ourTexture);
     glActiveTexture(GL_TEXTURE0);
-    LoadTexture(ourTexture, "../texture/wall.jpg", GL_RGB);
+    LoadTexture(ourTexture, PROJECT_DIR "texture/container.jpg", GL_RGB);
     glGenTextures(1, &ourTexture2);
     glActiveTexture(GL_TEXTURE1);
-    LoadTexture(ourTexture2, "../texture/awesomeface.png", GL_RGBA);
+    LoadTexture(ourTexture2, PROJECT_DIR "texture/awesomeface.png", GL_RGBA);
     glEnable(GL_DEPTH_TEST);
     lastTime = glfwGetTime();
 }
@@ -179,8 +179,8 @@ void GLApp::onDrawFrame() {
         vertex_buf = std::make_shared<VertexBuffer>(program.GetId());
     }
     glm::mat4 model(1.0);
-    model = glm::rotate(model, glm::radians(180.0f * sinf(currentTime)), glm::vec3(1.0f, 0.0f, .0f));
-    model = glm::rotate(model, glm::radians(90.0f * sinf(currentTime)), glm::vec3(0.0f, 1.0f, .0f));
+    //model = glm::rotate(model, glm::radians(180.0f * sinf(currentTime)), glm::vec3(1.0f, 0.0f, .0f));
+    //model = glm::rotate(model, glm::radians(90.0f * sinf(currentTime)), glm::vec3(0.0f, 1.0f, .0f));
 
 
     glm::mat4 projection =
