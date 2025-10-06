@@ -28,7 +28,7 @@ inline std::string GetFileName(const std::filesystem::path &path) {
 inline void CheckGLError() {
     auto errCode = glGetError();
     if (errCode != GL_NO_ERROR) {
-        LOGE("Failed to initialize OpenGL context: %d", errCode);
+        LOGE("Failed to initialize OpenGL context: 0x%04x", errCode);
     }
 }
 

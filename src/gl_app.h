@@ -44,19 +44,19 @@ class GLApp {
     WindowInfo window_info{};
     GLFWwindow *window{};
 
-    std::vector<glm::vec3> cubePositions{glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
-                                         glm::vec3(-1.5f, -2.2f, -2.5f), glm::vec3(-3.8f, -2.0f, -12.3f),
-                                         glm::vec3(2.4f, -0.4f, -3.5f),  glm::vec3(-1.7f, 3.0f, -7.5f),
-                                         glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
-                                         glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
+    std::vector<glm::vec3> cubePositions{glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 0.0f, -15.0f),
+                                         glm::vec3(-1.5f, -0.0f, -2.5f), glm::vec3(-3.8f, 0.0f, -12.3f),
+                                         glm::vec3(2.4f, -0.0f, -3.5f),  glm::vec3(-1.7f, 0.0f, -7.5f),
+                                         glm::vec3(1.3f, -0.0f, 2.5f),  glm::vec3(5.32f, 0.0f, +7.5f),
+                                         glm::vec3(2.5f, 0.0f, -1.5f),   glm::vec3(-1.3f, 0.0f, -1.5f)};
     glm::vec3 lightPosition = glm::vec3(5.0f, 5.0f, -5.0f);
     glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
 
-    Program cube_program{}, coord_program{}, light_program{}, bag_program{}, depth_test_program{};
+    Program cube_program{}, coord_program{}, light_program{}, bag_program{}, plane_program{};
     double timeDelta{}, lastTime{};
     bool firstMouse = true;
     double lastX{}, lastY{};
-    std::unique_ptr<Model> bagModel{}, cubeModel{}, planeModel{};
+    std::unique_ptr<Model> bagModel{}, cubeModel{}, planeModel{}, grass_model{};
     const float planeScale = 100.0f;
     const float planeHeight = -1.001;
     Camera camera;

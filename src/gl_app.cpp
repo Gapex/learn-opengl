@@ -159,34 +159,22 @@ void GLApp::Init() {
     int available_vertex_cnt = -1;
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &available_vertex_cnt);
     LOGD("available vertices count: %d", available_vertex_cnt);
-    cube_program.Append(std::make_shared<Shader>(GL_VERTEX_SHADER, PROJECT_DIR "glsl/vertex.glsl"));
-    cube_program.Append(std::make_shared<Shader>(GL_FRAGMENT_SHADER, PROJECT_DIR "glsl/fragment.glsl"));
-
-    coord_program.Append(std::make_shared<Shader>(GL_VERTEX_SHADER, PROJECT_DIR "glsl/line.vertex.glsl"));
-    coord_program.Append(std::make_shared<Shader>(GL_FRAGMENT_SHADER, PROJECT_DIR "glsl/line.frag.glsl"));
-
     bag_program.Append(std::make_shared<Shader>(GL_VERTEX_SHADER, PROJECT_DIR "glsl/bag.vertex.glsl"));
     bag_program.Append(std::make_shared<Shader>(GL_FRAGMENT_SHADER, PROJECT_DIR "glsl/bag.frag.glsl"));
-    depth_test_program.Append(std::make_shared<Shader>(GL_VERTEX_SHADER, PROJECT_DIR "glsl/depth_test.vertex.glsl"));
-    depth_test_program.Append(std::make_shared<Shader>(GL_FRAGMENT_SHADER, PROJECT_DIR "glsl/depth_test.frag.glsl"));
+    plane_program.Append(std::make_shared<Shader>(GL_VERTEX_SHADER, PROJECT_DIR "glsl/depth_test.vertex.glsl"));
+    plane_program.Append(std::make_shared<Shader>(GL_FRAGMENT_SHADER, PROJECT_DIR "glsl/depth_test.frag.glsl"));
 
-    if (!cube_program.Init()) {
-        LOGE("Failed to initialize cube program");
-        return;
-    }
-    if (!coord_program.Init()) {
-        LOGE("Failed to initialize line program");
+    if (!plane_program.Init()) {
+        LOGE("Failed to initialize depth test program");
         return;
     }
     if (!bag_program.Init()) {
         LOGE("Failed to initialize bag program");
         return;
     }
-    if (!depth_test_program.Init()) {
-        LOGE("Failed to initialize depth test program");
-    }
     glEnable(GL_DEPTH_TEST);
-    // bagModel = std::make_unique<FileModel>(PROJECT_DIR "assets/backpack/backpack.obj");
+
+    bagModel = std::make_unique<FileModel>(PROJECT_DIR "assets/backpack/backpack.obj");
     cubeModel = std::make_unique<FileModel>(PROJECT_DIR "assets/cube/cube.obj");
     Texture wallTexture;
     wallTexture.id = Model::TextureFromFile("marble.jpg", PROJECT_DIR "texture/");
@@ -197,19 +185,23 @@ void GLApp::Init() {
     planeModel->meshes.emplace_back();
     Mesh &planeMesh = planeModel->meshes.back();
     std::vector<Vertex> planeVertices(6);
-    planeVertices[0].position = glm::vec3(5.0f, planeHeight, 5.0f);
-    planeVertices[0].texCoords = glm::vec2(0.0f, 0.0f) * planeScale;
-    planeVertices[1].position = glm::vec3(-5.0f, planeHeight, 5.0f);
-    planeVertices[1].texCoords = glm::vec2(1.0f, 0.0f) * planeScale;
-    planeVertices[2].position = glm::vec3(-5.0f, planeHeight, -5.0f);
-    planeVertices[2].texCoords = glm::vec2(1, 1.0f) * planeScale;
-    planeVertices[3].position = glm::vec3(5.0f, planeHeight, 5.0f);
-    planeVertices[3].texCoords = glm::vec2(0.0f, 0.0f) * planeScale;
-    planeVertices[4].position = glm::vec3(-5.0f, planeHeight, -5.0f);
-    planeVertices[4].texCoords = glm::vec2(1, 1.0f) * planeScale;
-    planeVertices[5].position = glm::vec3(5.0f, planeHeight, -5.0f);
-    planeVertices[5].texCoords = glm::vec2(0.0f, 1.0f) * planeScale;
+    planeVertices[0].position = glm::vec3(1.0f, 0, 1.0f);
+    planeVertices[0].texCoords = glm::vec2(0.0f, 0.0f);
+    planeVertices[1].position = glm::vec3(-1.0f, 0, 1.0f);
+    planeVertices[1].texCoords = glm::vec2(1.0f, 0.0f);
+    planeVertices[2].position = glm::vec3(-1.0f, 0, -1.0f);
+    planeVertices[2].texCoords = glm::vec2(1, 1.0f);
+    planeVertices[3].position = glm::vec3(1.0f, 0, 1.0f);
+    planeVertices[3].texCoords = glm::vec2(0.0f, 0.0f);
+    planeVertices[4].position = glm::vec3(-1.0f, 0, -1.0f);
+    planeVertices[4].texCoords = glm::vec2(1, 1.0f);
+    planeVertices[5].position = glm::vec3(1.0f, 0, -1.0f);
+    planeVertices[5].texCoords = glm::vec2(0.0f, 1.0f);
     planeMesh.vertices = planeVertices;
+    for (auto &vertex : planeMesh.vertices) {
+        vertex.texCoords *= planeScale;
+        vertex.position.y = planeHeight;
+    }
     planeMesh.indices = {0, 1, 2, 3, 4, 5};
     Texture planeTexture;
     planeTexture.id = Model::TextureFromFile("metal.png", PROJECT_DIR "texture/");
@@ -218,6 +210,17 @@ void GLApp::Init() {
     planeMesh.Setup();
     CheckGLError();
     lastTime = glfwGetTime();
+
+    grass_model = std::make_unique<Model>();
+    grass_model->meshes.emplace_back();
+    Mesh &grassMesh = grass_model->meshes.back();
+    grassMesh.vertices = planeVertices;
+    grassMesh.indices = {0, 1, 2, 3, 4, 5};
+    Texture grassTexture;
+    grassTexture.id = Model::TextureFromFile("grass.png", PROJECT_DIR "texture/", GL_CLAMP_TO_EDGE);
+    grassTexture.type = "texture_diffuse";
+    grassMesh.textures.emplace_back(grassTexture);
+    grassMesh.Setup();
 }
 
 void GLApp::onDrawImGuiFrame() {
@@ -237,39 +240,46 @@ void GLApp::onDrawFrame() {
     timeDelta = currentTime - lastTime;
     lastTime = currentTime;
     glClearColor(color_bg.x, color_bg.y, color_bg.z, color_bg.w);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     const glm::mat4 projection =
         glm::perspective(glm::radians(camera.zoom), window_info.width * 1.0f / window_info.height, 0.1f, 1000.0f);
 
-    bag_program.Activate();
-    bag_program.SetMat4("viewMat", camera.GetViewMatrix());
-    bag_program.SetMat4("projMat", projection);
-    bag_program.SetMat4("modelMat", glm::mat4(1.0f));
-    if (bagModel) {
-        bagModel->Draw(bag_program);
+    plane_program.Activate();
+    plane_program.SetMat4("projMat", projection);
+    plane_program.SetMat4("viewMat", camera.GetViewMatrix());
+    if (planeModel) {
+        glm::mat4 model(1.0f);
+        model = glm::scale(model, glm::vec3(planeScale, 1.0f, planeScale));
+        plane_program.SetMat4("modelMat", model);
+        planeModel->Draw(plane_program);
     }
-    if (cubeModel) {
+    if (grass_model) {
         for (size_t i = 0; i < cubePositions.size(); i++) {
             glm::mat4 model(1.0f);
-            float angle = 20.0f * static_cast<float>(i) * glfwGetTime();
-            model = glm::translate(model, cubePositions.at(i));
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            glm::vec3 grassPosition = cubePositions[i] * 2.0f;
+            grassPosition.y += 0.01f;
+            grassPosition.z += 1.001;
+            model = glm::translate(model, grassPosition);
+            model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
             bag_program.SetMat4("modelMat", model);
-            cubeModel->Draw(bag_program);
+            grass_model->Draw(plane_program);
         }
     }
 
-    CheckGLError();
-    depth_test_program.Activate();
-    depth_test_program.SetMat4("projMat", projection);
-    depth_test_program.SetMat4("viewMat", camera.GetViewMatrix());
-    {
-        glm::mat4 model(1.0f);
-        model = glm::scale(model, glm::vec3(planeScale, 1.0f, planeScale));
-        depth_test_program.SetMat4("modelMat", model);
-    }
-    if (planeModel) {
-        planeModel->Draw(depth_test_program);
+    bag_program.Activate();
+    bag_program.SetMat4("viewMat", camera.GetViewMatrix());
+    bag_program.SetMat4("projMat", projection);
+    // if (bagModel) {
+    //     bag_program.SetMat4("modelMat", glm::mat4(1.0f));
+    //     bagModel->Draw(bag_program);
+    // }
+    if (cubeModel) {
+        for (size_t i = 0; i < cubePositions.size(); i++) {
+            glm::mat4 model(1.0f);
+            model = glm::translate(model, cubePositions.at(i) * 2.0f);
+            bag_program.SetMat4("modelMat", model);
+            cubeModel->Draw(bag_program);
+        }
     }
 }

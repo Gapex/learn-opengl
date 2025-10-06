@@ -63,7 +63,7 @@ class Model {
   public:
     void Draw(Program &shader);
     virtual ~Model() = default;
-    static unsigned int TextureFromFile(const std::string &filename, const std::string &directory);
+    static unsigned int TextureFromFile(const std::string &filename, const std::string &directory, GLint repeatType = GL_REPEAT);
 
     std::vector<Mesh> meshes;
 };
