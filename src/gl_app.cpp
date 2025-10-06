@@ -10,6 +10,7 @@
 
 #include <chrono>
 #include <iostream>
+#include <map>
 #include <thread>
 #include <unordered_map>
 
@@ -173,6 +174,8 @@ void GLApp::Init() {
         return;
     }
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     bagModel = std::make_unique<FileModel>(PROJECT_DIR "assets/backpack/backpack.obj");
     cubeModel = std::make_unique<FileModel>(PROJECT_DIR "assets/cube/cube.obj");
@@ -211,16 +214,16 @@ void GLApp::Init() {
     CheckGLError();
     lastTime = glfwGetTime();
 
-    grass_model = std::make_unique<Model>();
-    grass_model->meshes.emplace_back();
-    Mesh &grassMesh = grass_model->meshes.back();
-    grassMesh.vertices = planeVertices;
-    grassMesh.indices = {0, 1, 2, 3, 4, 5};
-    Texture grassTexture;
-    grassTexture.id = Model::TextureFromFile("grass.png", PROJECT_DIR "texture/", GL_CLAMP_TO_EDGE);
-    grassTexture.type = "texture_diffuse";
-    grassMesh.textures.emplace_back(grassTexture);
-    grassMesh.Setup();
+    transparent_window = std::make_unique<Model>();
+    transparent_window->meshes.emplace_back();
+    Mesh &transparent_window_mesh = transparent_window->meshes.back();
+    transparent_window_mesh.vertices = planeVertices;
+    transparent_window_mesh.indices = {0, 1, 2, 3, 4, 5};
+    Texture transparent_window_texture;
+    transparent_window_texture.id = Model::TextureFromFile("transparent_window.png", PROJECT_DIR "texture/", GL_CLAMP_TO_EDGE);
+    transparent_window_texture.type = "texture_diffuse";
+    transparent_window_mesh.textures.emplace_back(transparent_window_texture);
+    transparent_window_mesh.Setup();
 }
 
 void GLApp::onDrawImGuiFrame() {
@@ -240,32 +243,11 @@ void GLApp::onDrawFrame() {
     timeDelta = currentTime - lastTime;
     lastTime = currentTime;
     glClearColor(color_bg.x, color_bg.y, color_bg.z, color_bg.w);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     const glm::mat4 projection =
         glm::perspective(glm::radians(camera.zoom), window_info.width * 1.0f / window_info.height, 0.1f, 1000.0f);
 
-    plane_program.Activate();
-    plane_program.SetMat4("projMat", projection);
-    plane_program.SetMat4("viewMat", camera.GetViewMatrix());
-    if (planeModel) {
-        glm::mat4 model(1.0f);
-        model = glm::scale(model, glm::vec3(planeScale, 1.0f, planeScale));
-        plane_program.SetMat4("modelMat", model);
-        planeModel->Draw(plane_program);
-    }
-    if (grass_model) {
-        for (size_t i = 0; i < cubePositions.size(); i++) {
-            glm::mat4 model(1.0f);
-            glm::vec3 grassPosition = cubePositions[i] * 2.0f;
-            grassPosition.y += 0.01f;
-            grassPosition.z += 1.001;
-            model = glm::translate(model, grassPosition);
-            model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-            bag_program.SetMat4("modelMat", model);
-            grass_model->Draw(plane_program);
-        }
-    }
 
     bag_program.Activate();
     bag_program.SetMat4("viewMat", camera.GetViewMatrix());
@@ -280,6 +262,33 @@ void GLApp::onDrawFrame() {
             model = glm::translate(model, cubePositions.at(i) * 2.0f);
             bag_program.SetMat4("modelMat", model);
             cubeModel->Draw(bag_program);
+        }
+    }
+
+    plane_program.Activate();
+    plane_program.SetMat4("projMat", projection);
+    plane_program.SetMat4("viewMat", camera.GetViewMatrix());
+    if (planeModel) {
+        glm::mat4 model(1.0f);
+        model = glm::scale(model, glm::vec3(planeScale, 1.0f, planeScale));
+        plane_program.SetMat4("modelMat", model);
+        planeModel->Draw(plane_program);
+    }
+    if (transparent_window) {
+        std::map<float, glm::mat4> sorted_transparent_windows;
+        for (size_t i = 0; i < cubePositions.size(); i++) {
+            glm::mat4 model(1.0f);
+            glm::vec3 window_pos = cubePositions[i] * 2.0f;
+            window_pos.y += 0.01f;
+            window_pos.z += 1.5f;
+            window_pos.x += glm::sin(glfwGetTime() * ( i + 1));
+            model = glm::translate(model, window_pos);
+            model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            sorted_transparent_windows[glm::length(camera.position - window_pos)] = model;
+        }
+        for (auto iter =  sorted_transparent_windows.rbegin(); iter != sorted_transparent_windows.rend(); iter++) {
+            bag_program.SetMat4("modelMat", iter->second);
+            transparent_window->Draw(plane_program);
         }
     }
 }
