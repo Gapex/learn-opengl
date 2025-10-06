@@ -25,4 +25,11 @@ inline std::string GetFileName(const std::filesystem::path &path) {
                 ##__VA_ARGS__);                                                                                        \
     } while (0)
 
+inline void CheckGLError() {
+    auto errCode = glGetError();
+    if (errCode != GL_NO_ERROR) {
+        LOGE("Failed to initialize OpenGL context: %d", errCode);
+    }
+}
+
 #endif // LEARN_OPENGL_LOG_H

@@ -38,7 +38,7 @@ class GLApp {
     void onDrawImGuiFrame();
 
   private:
-    const glm::vec4 color_bg{0.3f, 0.3f, 0.3f, 1.0f};
+    const glm::vec4 color_bg{0.1f, 0.1f, 0.1f, 1.0f};
     size_t g_clock = 0;
     size_t frame_freq = 60;
     WindowInfo window_info{};
@@ -52,10 +52,12 @@ class GLApp {
     glm::vec3 lightPosition = glm::vec3(5.0f, 5.0f, -5.0f);
     glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
 
-    Program cube_program{}, coord_program{}, light_program{}, bag_program{};
+    Program cube_program{}, coord_program{}, light_program{}, bag_program{}, depth_test_program{};
     double timeDelta{}, lastTime{};
     bool firstMouse = true;
     double lastX{}, lastY{};
-    std::unique_ptr<Model> bagModel{}, cubeModel{};
+    std::unique_ptr<Model> bagModel{}, cubeModel{}, planeModel{};
+    const float planeScale = 100.0f;
+    const float planeHeight = -1.001;
     Camera camera;
 };

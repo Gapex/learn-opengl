@@ -30,6 +30,9 @@ class Program {
     void SetVec3(const char *name, glm::vec3 value) const;
 
   private:
+
+    GLint GetUniformLocation(const char *name) const;
+
     std::vector<std::shared_ptr<Shader>> shaders{};
     GLuint program_id{};
     bool initialized{false};

@@ -51,17 +51,26 @@ void Program::Append(const std::shared_ptr<Shader> &shader) {
 }
 
 void Program::SetInt(const char *name, int value) const {
-    glUniform1i(glGetUniformLocation(program_id, name), value);
+    glUniform1i(GetUniformLocation(name), value);
 }
 
 void Program::SetMat4(const char *name, const glm::mat4 &mat) const {
-    glUniformMatrix4fv(glGetUniformLocation(program_id, name), 1, GL_FALSE, glm::value_ptr(mat));
+    glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(mat));
 }
 
 void Program::SetFloat(const char *name, float value) const {
-    glUniform1f(glGetUniformLocation(program_id, name), value);
+    glUniform1f(GetUniformLocation(name), value);
 }
 
 void Program::SetVec3(const char *name, glm::vec3 value) const {
-    glUniform3f(glGetUniformLocation(program_id, name), value.x, value.y, value.z);
+    glUniform3f(GetUniformLocation(name), value.x, value.y, value.z);
+}
+
+GLint Program::GetUniformLocation(const char *name) const {
+    auto location = glGetUniformLocation(program_id, name);
+    if (location == -1) {
+        LOGE("uniform location not found: %s", name);
+        return -1;
+    }
+    return location;
 }

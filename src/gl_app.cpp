@@ -167,6 +167,8 @@ void GLApp::Init() {
 
     bag_program.Append(std::make_shared<Shader>(GL_VERTEX_SHADER, PROJECT_DIR "glsl/bag.vertex.glsl"));
     bag_program.Append(std::make_shared<Shader>(GL_FRAGMENT_SHADER, PROJECT_DIR "glsl/bag.frag.glsl"));
+    depth_test_program.Append(std::make_shared<Shader>(GL_VERTEX_SHADER, PROJECT_DIR "glsl/depth_test.vertex.glsl"));
+    depth_test_program.Append(std::make_shared<Shader>(GL_FRAGMENT_SHADER, PROJECT_DIR "glsl/depth_test.frag.glsl"));
 
     if (!cube_program.Init()) {
         LOGE("Failed to initialize cube program");
@@ -180,17 +182,41 @@ void GLApp::Init() {
         LOGE("Failed to initialize bag program");
         return;
     }
+    if (!depth_test_program.Init()) {
+        LOGE("Failed to initialize depth test program");
+    }
     glEnable(GL_DEPTH_TEST);
-    glDepthMask(GL_TRUE);
-    glDepthFunc(GL_LESS);
-    // glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    bagModel = std::make_unique<FileModel>(PROJECT_DIR "assets/backpack/backpack.obj");
+    // bagModel = std::make_unique<FileModel>(PROJECT_DIR "assets/backpack/backpack.obj");
     cubeModel = std::make_unique<FileModel>(PROJECT_DIR "assets/cube/cube.obj");
     Texture wallTexture;
-    wallTexture.id = Model::TextureFromFile("awesomeface.png", PROJECT_DIR "texture/");
+    wallTexture.id = Model::TextureFromFile("marble.jpg", PROJECT_DIR "texture/");
     wallTexture.type = "texture_diffuse";
     cubeModel->meshes.front().textures.emplace_back(wallTexture);
+
+    planeModel = std::make_unique<Model>();
+    planeModel->meshes.emplace_back();
+    Mesh &planeMesh = planeModel->meshes.back();
+    std::vector<Vertex> planeVertices(6);
+    planeVertices[0].position = glm::vec3(5.0f, planeHeight, 5.0f);
+    planeVertices[0].texCoords = glm::vec2(0.0f, 0.0f) * planeScale;
+    planeVertices[1].position = glm::vec3(-5.0f, planeHeight, 5.0f);
+    planeVertices[1].texCoords = glm::vec2(1.0f, 0.0f) * planeScale;
+    planeVertices[2].position = glm::vec3(-5.0f, planeHeight, -5.0f);
+    planeVertices[2].texCoords = glm::vec2(1, 1.0f) * planeScale;
+    planeVertices[3].position = glm::vec3(5.0f, planeHeight, 5.0f);
+    planeVertices[3].texCoords = glm::vec2(0.0f, 0.0f) * planeScale;
+    planeVertices[4].position = glm::vec3(-5.0f, planeHeight, -5.0f);
+    planeVertices[4].texCoords = glm::vec2(1, 1.0f) * planeScale;
+    planeVertices[5].position = glm::vec3(5.0f, planeHeight, -5.0f);
+    planeVertices[5].texCoords = glm::vec2(0.0f, 1.0f) * planeScale;
+    planeMesh.vertices = planeVertices;
+    planeMesh.indices = {0, 1, 2, 3, 4, 5};
+    Texture planeTexture;
+    planeTexture.id = Model::TextureFromFile("metal.png", PROJECT_DIR "texture/");
+    planeTexture.type = "texture_diffuse";
+    planeMesh.textures.emplace_back(planeTexture);
+    planeMesh.Setup();
+    CheckGLError();
     lastTime = glfwGetTime();
 }
 
@@ -232,5 +258,18 @@ void GLApp::onDrawFrame() {
             bag_program.SetMat4("modelMat", model);
             cubeModel->Draw(bag_program);
         }
+    }
+
+    CheckGLError();
+    depth_test_program.Activate();
+    depth_test_program.SetMat4("projMat", projection);
+    depth_test_program.SetMat4("viewMat", camera.GetViewMatrix());
+    {
+        glm::mat4 model(1.0f);
+        model = glm::scale(model, glm::vec3(planeScale, 1.0f, planeScale));
+        depth_test_program.SetMat4("modelMat", model);
+    }
+    if (planeModel) {
+        planeModel->Draw(depth_test_program);
     }
 }

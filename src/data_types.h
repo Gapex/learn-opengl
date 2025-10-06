@@ -45,11 +45,18 @@ class Mesh {
     std::vector<Texture> textures{};
     Mesh() = default;
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
+    Mesh(Mesh&& other) noexcept;
+    Mesh& operator=(Mesh&& other) noexcept;
+
     void Draw(Program &shader);
+    void Setup();
+    [[nodiscard]] bool IsSetup() const { return isSetup; }
+
+    ~Mesh();
 
   private:
-    unsigned int vao, vbo, ebo;
-    void setupMesh();
+    bool isSetup{false};
+    unsigned int vao{}, vbo{}, ebo{};
 };
 
 class Model {
@@ -69,10 +76,10 @@ class FileModel : public Model {
   private:
     std::string directory{};
     std::unordered_map<std::string, Texture &> textures_loaded;
-    void loadModel(const std::string &path);
-    void processNode(aiNode *node, const aiScene *scene);
-    Mesh processMesh(const aiMesh *mesh, const aiScene *scene);
-    std::vector<Texture> loadMaterialTextures(const aiMaterial *material, aiTextureType type,
+    void LoadFromFile(const std::string &path);
+    void ProcessNode(aiNode *node, const aiScene *scene);
+    Mesh ProcessMesh(const aiMesh *mesh, const aiScene *scene);
+    std::vector<Texture> LoadMaterialTextures(const aiMaterial *material, aiTextureType type,
                                               const std::string &typeName);
 };
 
