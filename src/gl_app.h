@@ -8,6 +8,7 @@
 #include "vertex_buffer.hpp"
 #include "program.hpp"
 #include "window_info.h"
+#include "data_types.h"
 
 class GLApp {
   public:
@@ -32,115 +33,29 @@ class GLApp {
 
     void onDrawFrame();
 
+    void InitImGui();
+
+    void onDrawImGuiFrame();
+
   private:
     const glm::vec4 color_bg{0.3f, 0.3f, 0.3f, 1.0f};
     size_t g_clock = 0;
     size_t frame_freq = 60;
     WindowInfo window_info{};
-    GLFWwindow *win{};
+    GLFWwindow *window{};
 
-    std::vector<float> cube{
-        // 3d vertex,      , 2d uv     , 3d objectColor   , 3d normalVector
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.5f, 0.31f, 0.0f, 0.0f, -1.0f, // face 1
-        0.5f,  -0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.5f, 0.31f, 0.0f, 0.0f, -1.0f,
-        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 1.0f, 0.5f, 0.31f, 0.0f, 0.0f, -1.0f,
-        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 1.0f, 0.5f, 0.31f, 0.0f, 0.0f, -1.0f,
-        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 1.0f, 0.5f, 0.31f, 0.0f, 0.0f, -1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.5f, 0.31f, 0.0f, 0.0f, -1.0f,
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 1.0f, 0.5f, 0.31f, 0.0f, 0.0f, 1.0f, // face 2
-        0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, 1.0f, 0.5f, 0.31f, 0.0f, 0.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f, 0.5f, 0.31f, 0.0f, 0.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f, 0.5f, 0.31f, 0.0f, 0.0f, 1.0f,
-        -0.5f, 0.5f,  0.5f,  0.0f, 1.0f, 1.0f, 0.5f, 0.31f, 0.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 1.0f, 0.5f, 0.31f, 0.0f, 0.0f, 1.0f,
-        -0.5f, 0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.5f, 0.31f, -1.0f, 0.0f, 0.0f, // face 3
-        -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f, 1.0f, 0.5f, 0.31f, -1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.5f, 0.31f, -1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.5f, 0.31f, -1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 1.0f, 0.5f, 0.31f, -1.0f, 0.0f, 0.0f,
-        -0.5f, 0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.5f, 0.31f, -1.0f, 0.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.5f, 0.31f, +1.0f, 0.0f, 0.0f, // face 4
-        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 1.0f, 0.5f, 0.31f, +1.0f, 0.0f, 0.0f,
-        0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.5f, 0.31f, +1.0f, 0.0f, 0.0f,
-        0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.5f, 0.31f, +1.0f, 0.0f, 0.0f,
-        0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 1.0f, 0.5f, 0.31f, +1.0f, 0.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.5f, 0.31f, +1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.5f, 0.31f, 0.0f, -1.0f, 0.0f, // face 5
-        0.5f,  -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.5f, 0.31f, 0.0f, -1.0f, 0.0f,
-        0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, 1.0f, 0.5f, 0.31f, 0.0f, -1.0f, 0.0f,
-        0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, 1.0f, 0.5f, 0.31f, 0.0f, -1.0f, 0.0f,
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 1.0f, 0.5f, 0.31f, 0.0f, -1.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.5f, 0.31f, 0.0f, -1.0f, 0.0f,
-        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 1.0f, 0.5f, 0.31f, 0.0f, +1.0f, 0.0f, // face 6
-        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 1.0f, 0.5f, 0.31f, 0.0f, +1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.5f, 0.31f, 0.0f, +1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.5f, 0.31f, 0.0f, +1.0f, 0.0f,
-        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 1.0f, 0.5f, 0.31f, 0.0f, +1.0f, 0.0f,
-        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 1.0f, 0.5f, 0.31f, 0.0f, +1.0f, 0.0f};
-       std::vector<float> light_cube{
-        // 3d vertex,      , 2d uv     , 3d objectColor   , 3d normalVector
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, // face 1
-        0.5f,  -0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f,
-        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f,
-        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f,
-        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f,
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, // face 2
-        0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-        -0.5f, 0.5f,  0.5f,  0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-        -0.5f, 0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, // face 3
-        -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f,
-        -0.5f, 0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f, +1.0f, 0.0f, 0.0f, // face 4
-        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, +1.0f, 0.0f, 0.0f,
-        0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, +1.0f, 0.0f, 0.0f,
-        0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, +1.0f, 0.0f, 0.0f,
-        0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 1.0f, 1.0f, 1.0f, +1.0f, 0.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f, +1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, -1.0f, 0.0f, // face 5
-        0.5f,  -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, -1.0f, 0.0f,
-        0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, -1.0f, 0.0f,
-        0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, -1.0f, 0.0f,
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, -1.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, -1.0f, 0.0f,
-        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, +1.0f, 0.0f, // face 6
-        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, +1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, +1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, +1.0f, 0.0f,
-        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, +1.0f, 0.0f,
-        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, +1.0f, 0.0f};
     std::vector<glm::vec3> cubePositions{glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
                                          glm::vec3(-1.5f, -2.2f, -2.5f), glm::vec3(-3.8f, -2.0f, -12.3f),
                                          glm::vec3(2.4f, -0.4f, -3.5f),  glm::vec3(-1.7f, 3.0f, -7.5f),
                                          glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
                                          glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
-
-    std::vector<float> coordinates{
-        -1.0f,    0.0f,     0.0f,     1.0f, 0.0f, 0.0f, 0.0f, // X-axis, red
-        +1000.0f, 0.0f,     0.0f,     1.0f, 0.0f, 0.0f, 1.0f, // X-axis, red
-
-        0.0f,     -1.0f,    0.0f,     0.0f, 1.0f, 0.0f, 0.0f, // Y-axis, green
-        0.0f,     +1000.0f, 0.0f,     0.0f, 1.0f, 0.0f, 1.0f, // Y-axis, green
-
-        0.0f,     0.0f,     -1.0f,    0.0f, 0.0f, 1.0f, 0.0f, // Z-axis, blue
-        0.0f,     0.0f,     +1000.0f, 0.0f, 0.0f, 1.0f, 1.0f, // Z-axis, blue
-    };
     glm::vec3 lightPosition = glm::vec3(5.0f, 5.0f, -5.0f);
     glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
 
-    Program cube_program{}, coord_program{}, light_program{};
-    std::shared_ptr<VertexBuffer> cube_vertex_buffer{};
-    std::shared_ptr<VertexBuffer> light_vertex_buffer{};
-    std::shared_ptr<VertexBuffer> coordinates_vertex_buffer{};
-    GLuint ourTexture{}, ourTexture2{};
+    Program cube_program{}, coord_program{}, light_program{}, bag_program{};
     double timeDelta{}, lastTime{};
     bool firstMouse = true;
     double lastX{}, lastY{};
+    std::unique_ptr<Model> bagModel{}, cubeModel{};
     Camera camera;
 };

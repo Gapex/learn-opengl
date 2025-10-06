@@ -11,3 +11,5 @@ fi
 if [ ! -d glfw ]; then
   git clone https://github.com/glfw/glfw.git
 fi
+
+git clone https://github.com/ocornut/imgui.git

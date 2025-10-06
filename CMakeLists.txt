@@ -22,7 +22,7 @@ set(GLAD_SRC
 # set up stb_image
 set(STB_IMG_DIR ${OPEN_SOURCE_DIR}/stb-image)
 include_directories(${STB_IMG_DIR})
-add_definitions(-DSTB_IMAGE_IMPLEMENTATION)
+#add_definitions(-DSTB_IMAGE_IMPLEMENTATION)
 # set up stb_image end
 include_directories(/opt/homebrew/include)
 
@@ -30,6 +30,27 @@ include_directories(/opt/homebrew/include)
 set(GLM_DIR ${OPEN_SOURCE_DIR}/glm)
 include_directories(${GLM_DIR})
 # set up end glm
+
+# set up imgui
+set(IMGUI_DIR ${OPEN_SOURCE_DIR}/imgui)
+include_directories(${IMGUI_DIR}/ ${IMGUI_DIR}/backends)
+file(GLOB IMGUI_SRCS ${IMGUI_DIR}/*.cpp)
+#message(FATAL_ERROR ${IMGUI_SRCS})
+# end set up imgui
+
+# set up assimp
+set(ASSIMP_DIR ${OPEN_SOURCE_DIR}/assimp)
+# 配置Assimp编译选项（可选）
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)  # 不编译工具
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)         # 不编译测试
+set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)             # 不执行安装
+set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE BOOL "" FORCE)
+# 根据需要启用特定格式的导入/导出器
+set(ASSIMP_BUILD_OBJ_IMPORTER ON CACHE BOOL "" FORCE)   # 启用OBJ格式导入
+set(ASSIMP_BUILD_GLTF_IMPORTER ON CACHE BOOL "" FORCE)  # 启用glTF格式导入
+add_subdirectory(${ASSIMP_DIR})
+# end set up assimp
 
 link_directories(/opt/homebrew/lib)
 

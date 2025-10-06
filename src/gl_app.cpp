@@ -4,9 +4,11 @@
 #include "log.h"
 #include "stb_image.h"
 #include "triangle_vertex_buffer.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 #include <chrono>
-#include <cmath>
 #include <iostream>
 #include <thread>
 #include <unordered_map>
@@ -50,19 +52,19 @@ GLApp::GLApp(WindowInfo window_info)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    win = glfwCreateWindow(window_info.width, window_info.height, window_info.title.c_str(), nullptr, nullptr);
-    if (win == nullptr) {
+    window = glfwCreateWindow(window_info.width, window_info.height, window_info.title.c_str(), nullptr, nullptr);
+    if (window == nullptr) {
         LOGE("create GLFW window failed");
         glfwTerminate();
         return;
     }
-    glfwSetWindowUserPointer(win, this);
-    glfwMakeContextCurrent(win);
-    glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSetFramebufferSizeCallback(win, framebuffer_size_callback);
-    glfwSetCursorPosCallback(win, cursor_position_callback);
+    glfwSetWindowUserPointer(window, this);
+    glfwMakeContextCurrent(window);
+    // glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, cursor_position_callback);
 
-    glfwSetScrollCallback(win, scroll_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         LOGE("Failed to load GLAD");
@@ -70,10 +72,22 @@ GLApp::GLApp(WindowInfo window_info)
     }
 
     Init();
+    InitImGui();
+}
+
+void GLApp::InitImGui() {
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 410 core");
 }
 
 GLApp::~GLApp() {
-    glfwDestroyWindow(win);
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+    glfwDestroyWindow(window);
     glfwTerminate();
 }
 
@@ -109,12 +123,14 @@ void GLApp::UpdateClock() {
 }
 
 void GLApp::run() {
-    while (!glfwWindowShouldClose(win)) {
-        ProcessInput(win);
+    while (!glfwWindowShouldClose(window)) {
+        ProcessInput(window);
         UpdateClock();
+        onDrawImGuiFrame();
         onDrawFrame();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwPollEvents();
-        glfwSwapBuffers(win);
+        glfwSwapBuffers(window);
     }
 }
 
@@ -143,22 +159,14 @@ void GLApp::Init() {
     int available_vertex_cnt = -1;
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &available_vertex_cnt);
     LOGD("available vertices count: %d", available_vertex_cnt);
-    std::shared_ptr<Shader> vertexShader(new Shader(GL_VERTEX_SHADER, PROJECT_DIR "glsl/vertex.glsl"));
-    if (!vertexShader->Init()) {
-        LOGE("Failed to initialize vertex shader");
-        return;
-    }
-    cube_program.Append(vertexShader);
-
-    std::shared_ptr<Shader> frag_shader(new Shader(GL_FRAGMENT_SHADER, PROJECT_DIR "glsl/fragment.glsl"));
-    if (!frag_shader->Init()) {
-        LOGE("Failed to initialize fragment shader");
-        return;
-    }
-    cube_program.Append(frag_shader);
+    cube_program.Append(std::make_shared<Shader>(GL_VERTEX_SHADER, PROJECT_DIR "glsl/vertex.glsl"));
+    cube_program.Append(std::make_shared<Shader>(GL_FRAGMENT_SHADER, PROJECT_DIR "glsl/fragment.glsl"));
 
     coord_program.Append(std::make_shared<Shader>(GL_VERTEX_SHADER, PROJECT_DIR "glsl/line.vertex.glsl"));
     coord_program.Append(std::make_shared<Shader>(GL_FRAGMENT_SHADER, PROJECT_DIR "glsl/line.frag.glsl"));
+
+    bag_program.Append(std::make_shared<Shader>(GL_VERTEX_SHADER, PROJECT_DIR "glsl/bag.vertex.glsl"));
+    bag_program.Append(std::make_shared<Shader>(GL_FRAGMENT_SHADER, PROJECT_DIR "glsl/bag.frag.glsl"));
 
     if (!cube_program.Init()) {
         LOGE("Failed to initialize cube program");
@@ -168,14 +176,34 @@ void GLApp::Init() {
         LOGE("Failed to initialize line program");
         return;
     }
-    glGenTextures(1, &ourTexture);
-    glActiveTexture(GL_TEXTURE0);
-    LoadTexture(ourTexture, PROJECT_DIR "texture/container.jpg", GL_RGB);
-    glGenTextures(1, &ourTexture2);
-    glActiveTexture(GL_TEXTURE1);
-    LoadTexture(ourTexture2, PROJECT_DIR "texture/awesomeface.png", GL_RGBA);
+    if (!bag_program.Init()) {
+        LOGE("Failed to initialize bag program");
+        return;
+    }
     glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+    glDepthFunc(GL_LESS);
+    // glEnable(GL_BLEND);
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    bagModel = std::make_unique<FileModel>(PROJECT_DIR "assets/backpack/backpack.obj");
+    cubeModel = std::make_unique<FileModel>(PROJECT_DIR "assets/cube/cube.obj");
+    Texture wallTexture;
+    wallTexture.id = Model::TextureFromFile("awesomeface.png", PROJECT_DIR "texture/");
+    wallTexture.type = "texture_diffuse";
+    cubeModel->meshes.front().textures.emplace_back(wallTexture);
     lastTime = glfwGetTime();
+}
+
+void GLApp::onDrawImGuiFrame() {
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    {
+        ImGui::Begin("Hello Imgui");
+        ImGui::Text("Frame Rate: %d Hz", int(ImGui::GetIO().Framerate));
+        ImGui::End();
+    }
+    ImGui::Render();
 }
 
 void GLApp::onDrawFrame() {
@@ -185,68 +213,24 @@ void GLApp::onDrawFrame() {
     glClearColor(color_bg.x, color_bg.y, color_bg.z, color_bg.w);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (!cube_vertex_buffer) {
-        cube_vertex_buffer = std::make_shared<TriangleVertexBuffer>(cube_program.GetId());
-    }
-    if (!coordinates_vertex_buffer) {
-        coordinates_vertex_buffer = std::make_shared<LineVertexBuffer>(coord_program.GetId(), 3.0f);
-    }
-    if (!light_vertex_buffer) {
-        light_vertex_buffer = std::make_shared<TriangleVertexBuffer>(cube_program.GetId());
-    }
-
     const glm::mat4 projection =
         glm::perspective(glm::radians(camera.zoom), window_info.width * 1.0f / window_info.height, 0.1f, 1000.0f);
-    const glm::mat4 view = camera.GetViewMatrix();
 
-    coord_program.Activate();
-    coordinates_vertex_buffer->Clear();
-    coordinates_vertex_buffer->AddVertexes(coordinates);
-    coordinates_vertex_buffer->SetTime(currentTime);
-    coordinates_vertex_buffer->SetVertexCnt(coordinates.size());
-    coordinates_vertex_buffer->Write();
-    coord_program.SetMat4("modelMat", glm::mat4(1.0f));
-    coord_program.SetMat4("viewMat", camera.GetViewMatrix());
-    coord_program.SetMat4("projMat", projection);
-    coordinates_vertex_buffer->Draw();
-
-    const int colorMode = 4;
-    cube_program.Activate();
-    cube_vertex_buffer->Clear();
-    cube_vertex_buffer->AddVertexes(cube);
-    cube_vertex_buffer->SetTime(currentTime);
-    cube_vertex_buffer->SetVertexCnt(36);
-    cube_vertex_buffer->Write();
-    cube_program.SetInt("colorMode", colorMode);
-    cube_program.SetInt("boxTexture", 0);
-    cube_program.SetInt("faceTexture", 1);
-    cube_program.SetMat4("viewMat", camera.GetViewMatrix());
-    cube_program.SetMat4("projMat", projection);
-    cube_program.SetVec3("lightPos", lightPosition);
-    cube_program.SetVec3("viewPos", camera.position);
-
-    for (size_t i = 0; i < cubePositions.size(); i++) {
-        glm::mat4 model(1.0f);
-        float angle = 20.0f * static_cast<float>(i);
-        model = glm::translate(model, cubePositions.at(i));
-        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-        cube_program.SetMat4("modelMat", model);
-        cube_vertex_buffer->Draw();
+    bag_program.Activate();
+    bag_program.SetMat4("viewMat", camera.GetViewMatrix());
+    bag_program.SetMat4("projMat", projection);
+    bag_program.SetMat4("modelMat", glm::mat4(1.0f));
+    if (bagModel) {
+        bagModel->Draw(bag_program);
     }
-    light_vertex_buffer->Clear();
-    light_vertex_buffer->AddVertexes(light_cube);
-    light_vertex_buffer->SetTime(currentTime);
-    light_vertex_buffer->SetVertexCnt(36);
-    light_vertex_buffer->Write();
-    if (colorMode == 4) {
-        cube_program.SetVec3("lightColor", lightColor);
+    if (cubeModel) {
+        for (size_t i = 0; i < cubePositions.size(); i++) {
+            glm::mat4 model(1.0f);
+            float angle = 20.0f * static_cast<float>(i) * glfwGetTime();
+            model = glm::translate(model, cubePositions.at(i));
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            bag_program.SetMat4("modelMat", model);
+            cubeModel->Draw(bag_program);
+        }
     }
-    {
-        glm::mat4 model(1.0f);
-        model = glm::translate(model, lightPosition);
-        model = glm::scale(model, glm::vec3(0.1f));
-        cube_program.SetMat4("modelMat", model);
-        cube_program.SetInt("colorMode", 0);
-    }
-    light_vertex_buffer->Draw();
 }

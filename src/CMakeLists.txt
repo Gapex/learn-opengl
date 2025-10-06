@@ -9,10 +9,15 @@ add_executable(main main.cpp
         triangle_vertex_buffer.h
         line_vertex_buffer.cpp
         line_vertex_buffer.h
+        ${IMGUI_SRCS}
+        ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
         camera.cpp
+        mesh.cpp
+        model.cpp
 )
 #target_link_libraries(main GL glfw pthread X11 dl Xi)
-target_link_libraries(main opengl32 glfw )
+target_link_libraries(main opengl32 glfw assimp::assimp)
 
 if (APPLE)
     message(STATUS "Apple = true")
