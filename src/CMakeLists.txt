@@ -1,20 +1,8 @@
-add_executable(main main.cpp
+file(GLOB PROJECT_SRCS *.cpp)
+add_executable(main
+        ${PROJECT_SRCS}
         ${GLAD_SRC}
         ${GLFW_SRCS}
-        gl_app.cpp
-        program.cpp
-        shader.cpp
-        vertex_buffer.cpp
-        triangle_vertex_buffer.cpp
-        triangle_vertex_buffer.h
-        line_vertex_buffer.cpp
-        line_vertex_buffer.h
-        ${IMGUI_SRCS}
-        ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
-        ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
-        camera.cpp
-        mesh.cpp
-        model.cpp
 )
 #target_link_libraries(main GL glfw pthread X11 dl Xi)
 target_link_libraries(main opengl32 glfw assimp::assimp)

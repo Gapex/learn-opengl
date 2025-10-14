@@ -3,10 +3,6 @@
 #include "line_vertex_buffer.h"
 #include "log.h"
 #include "stb_image.h"
-#include "triangle_vertex_buffer.h"
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
 
 #include <chrono>
 #include <iostream>
@@ -45,7 +41,7 @@ void GLApp::scroll_callback(GLFWwindow *window, double, double yoffset) {
     }
 }
 
-GLApp::GLApp(WindowInfo window_info)
+GLApp::GLApp(const WindowInfo& window_info)
     : window_info(window_info), camera(glm::vec3{1, 1, 3}, glm::vec3(0, 1, 0), YAW, PITCH) {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -73,21 +69,9 @@ GLApp::GLApp(WindowInfo window_info)
     }
 
     Init();
-    InitImGui();
-}
-
-void GLApp::InitImGui() {
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 410 core");
 }
 
 GLApp::~GLApp() {
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
     glfwDestroyWindow(window);
     glfwTerminate();
 }
@@ -118,42 +102,13 @@ void GLApp::ProcessInput(GLFWwindow *win) {
     }
 }
 
-void GLApp::UpdateClock() {
-    g_clock = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
-                  .count();
-}
-
 void GLApp::run() {
     while (!glfwWindowShouldClose(window)) {
         ProcessInput(window);
-        UpdateClock();
-        onDrawImGuiFrame();
         onDrawFrame();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwPollEvents();
         glfwSwapBuffers(window);
     }
-}
-
-void GLApp::LoadTexture(const GLuint &texture_id, const char *filename, GLuint img_format) {
-    glBindTexture(GL_TEXTURE_2D, texture_id);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                    GL_REPEAT); // set texture wrapping to GL_REPEAT (default
-                                // wrapping method)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // load image, create texture and generate mipmaps
-    int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-    unsigned char *data = stbi_load(filename, &width, &height, &nrChannels, 0);
-    if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, img_format, width, height, 0, img_format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    } else {
-        LOGE("Failed to load texture: %s", filename);
-    }
-    stbi_image_free(data);
 }
 
 void GLApp::Init() {
@@ -220,22 +175,11 @@ void GLApp::Init() {
     transparent_window_mesh.vertices = planeVertices;
     transparent_window_mesh.indices = {0, 1, 2, 3, 4, 5};
     Texture transparent_window_texture;
-    transparent_window_texture.id = Model::TextureFromFile("transparent_window.png", PROJECT_DIR "texture/", GL_CLAMP_TO_EDGE);
+    transparent_window_texture.id =
+        Model::TextureFromFile("transparent_window.png", PROJECT_DIR "texture/", GL_CLAMP_TO_EDGE);
     transparent_window_texture.type = "texture_diffuse";
     transparent_window_mesh.textures.emplace_back(transparent_window_texture);
     transparent_window_mesh.Setup();
-}
-
-void GLApp::onDrawImGuiFrame() {
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-    {
-        ImGui::Begin("Hello Imgui");
-        ImGui::Text("Frame Rate: %d Hz", int(ImGui::GetIO().Framerate));
-        ImGui::End();
-    }
-    ImGui::Render();
 }
 
 void GLApp::onDrawFrame() {
@@ -247,7 +191,6 @@ void GLApp::onDrawFrame() {
 
     const glm::mat4 projection =
         glm::perspective(glm::radians(camera.zoom), window_info.width * 1.0f / window_info.height, 0.1f, 1000.0f);
-
 
     bag_program.Activate();
     bag_program.SetMat4("viewMat", camera.GetViewMatrix());
@@ -281,12 +224,12 @@ void GLApp::onDrawFrame() {
             glm::vec3 window_pos = cubePositions[i] * 2.0f;
             window_pos.y += 0.01f;
             window_pos.z += 1.5f;
-            window_pos.x += glm::sin(glfwGetTime() * ( i + 1));
+            window_pos.x += glm::sin(glfwGetTime() * (i + 1));
             model = glm::translate(model, window_pos);
             model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
             sorted_transparent_windows[glm::length(camera.position - window_pos)] = model;
         }
-        for (auto iter =  sorted_transparent_windows.rbegin(); iter != sorted_transparent_windows.rend(); iter++) {
+        for (auto iter = sorted_transparent_windows.rbegin(); iter != sorted_transparent_windows.rend(); iter++) {
             bag_program.SetMat4("modelMat", iter->second);
             transparent_window->Draw(plane_program);
         }
