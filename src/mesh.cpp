@@ -1,14 +1,7 @@
 #include "data_types.h"
 
-#include <set>
-
-Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures)
-    : vertices(vertices), indices(indices), textures(textures) {
-    Setup();
-}
-
 Mesh::Mesh(Mesh &&other) noexcept {
-    vertices = std::move(other.vertices);
+    buffers = std::move(other.buffers);
     indices = std::move(other.indices);
     textures = std::move(other.textures);
     isSetup = other.isSetup;
@@ -21,11 +14,55 @@ Mesh::Mesh(Mesh &&other) noexcept {
     other.ebo = 0;
 }
 
+Mesh &Mesh::operator=(Mesh &&other) noexcept {
+    buffers = std::move(other.buffers);
+    indices = std::move(other.indices);
+    textures = std::move(other.textures);
+    isSetup = other.isSetup;
+    vao = other.vao;
+    vbo = other.vbo;
+    ebo = other.ebo;
+    other.isSetup = false;
+    other.vao = 0;
+    other.vbo = 0;
+    other.ebo = 0;
+    return *this;
+}
+
+bool Mesh::SetIndices(std::vector<unsigned int> indices) {
+    if (indices.size() % 3 != 0) {
+        LOGE("Invalid indices size: %llu", indices.size());
+    }
+    this->indices = Buffer(BufferType::INDICES, std::move(indices));
+    return true;
+}
+
+void Mesh::AddIndex(const glm::vec3 &index) {
+    this->indices.Append(static_cast<unsigned int>(index.x), static_cast<unsigned int>(index.y),
+                         static_cast<unsigned int>(index.z));
+}
+
+void Mesh::AddTexture(Texture texture) {
+    textures.emplace_back(std::move(texture));
+}
+
+const std::vector<Texture> &Mesh::Textures() const {
+    return textures;
+}
+
 Mesh::~Mesh() {
     if (isSetup) {
         glDeleteVertexArrays(1, &vao);
         glDeleteBuffers(1, &vbo);
     }
+}
+
+size_t Mesh::AllBuffersCapacity() const {
+    size_t capacity = 0;
+    for (auto &[_, buffer] : buffers) {
+        capacity += buffer.Capacity();
+    }
+    return capacity;
 }
 
 void Mesh::Setup() {
@@ -35,48 +72,31 @@ void Mesh::Setup() {
 
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
-
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(AllBuffersCapacity()), nullptr, GL_STATIC_DRAW);
+    GLsizeiptr offset = 0;
+    for (auto &[location, buffer] : buffers) {
+        const auto capacity = static_cast<GLsizeiptr>(buffer.Capacity());
+        const auto elementSize = static_cast<GLint>(buffer.ElementSize());
+        glBufferSubData(GL_ARRAY_BUFFER, offset, capacity, buffer.Data());
+        glVertexAttribPointer(location, elementSize, GL_FLOAT, GL_FALSE, elementSize * sizeof(float), (void *)(offset));
+        glEnableVertexAttribArray(location);
+        offset += capacity;
+    }
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
-
-    // 顶点位置
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), static_cast<void *>(0));
-    // 顶点法线
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, normal)));
-    // 顶点纹理坐标
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                          reinterpret_cast<void *>(offsetof(Vertex, texCoords)));
-
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(indices.Capacity()), indices.Data(), GL_STATIC_DRAW);
     glBindVertexArray(0);
     isSetup = true;
 }
 
-void Mesh::Draw(Program &shader) {
-    unsigned int diffuseNr = 1;
-    unsigned int specularNr = 1;
+void Mesh::Draw(const Program &shader) const {
     for (unsigned int i = 0; i < textures.size(); i++) {
-        glActiveTexture(GL_TEXTURE0 + i); // 在绑定之前激活相应的纹理单元
-        // 获取纹理序号（diffuse_textureN 中的 N）
-        std::string number;
-        std::string name = textures[i].type;
-        if (name == "texture_diffuse") {
-            number = std::to_string(diffuseNr++);
-        } else if (name == "texture_specular") {
-            number = std::to_string(specularNr++);
-        }
-
-        shader.SetInt((name + number).c_str(), i);
-        glBindTexture(GL_TEXTURE_2D, textures[i].id);
+        glActiveTexture(GL_TEXTURE0 + i);
+        glBindTexture(textures[i].type, textures[i].id);
+        shader.SetInt(textures[i].uniformName.c_str(), i);
     }
     glActiveTexture(GL_TEXTURE0);
 
-    // 绘制网格
     glBindVertexArray(vao);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, indices.Size(), GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
 }

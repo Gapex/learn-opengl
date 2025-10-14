@@ -41,7 +41,7 @@ void GLApp::scroll_callback(GLFWwindow *window, double, double yoffset) {
     }
 }
 
-GLApp::GLApp(const WindowInfo& window_info)
+GLApp::GLApp(const WindowInfo &window_info)
     : window_info(window_info), camera(glm::vec3{1, 1, 3}, glm::vec3(0, 1, 0), YAW, PITCH) {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -136,35 +136,24 @@ void GLApp::Init() {
     cubeModel = std::make_unique<FileModel>(PROJECT_DIR "assets/cube/cube.obj");
     Texture wallTexture;
     wallTexture.id = Model::TextureFromFile("marble.jpg", PROJECT_DIR "texture/");
-    wallTexture.type = "texture_diffuse";
-    cubeModel->meshes.front().textures.emplace_back(wallTexture);
+    wallTexture.uniformName = "texture_diffuse0";
+    cubeModel->meshes.front().AddTexture(wallTexture);
 
     planeModel = std::make_unique<Model>();
     planeModel->meshes.emplace_back();
     Mesh &planeMesh = planeModel->meshes.back();
-    std::vector<Vertex> planeVertices(6);
-    planeVertices[0].position = glm::vec3(1.0f, 0, 1.0f);
-    planeVertices[0].texCoords = glm::vec2(0.0f, 0.0f);
-    planeVertices[1].position = glm::vec3(-1.0f, 0, 1.0f);
-    planeVertices[1].texCoords = glm::vec2(1.0f, 0.0f);
-    planeVertices[2].position = glm::vec3(-1.0f, 0, -1.0f);
-    planeVertices[2].texCoords = glm::vec2(1, 1.0f);
-    planeVertices[3].position = glm::vec3(1.0f, 0, 1.0f);
-    planeVertices[3].texCoords = glm::vec2(0.0f, 0.0f);
-    planeVertices[4].position = glm::vec3(-1.0f, 0, -1.0f);
-    planeVertices[4].texCoords = glm::vec2(1, 1.0f);
-    planeVertices[5].position = glm::vec3(1.0f, 0, -1.0f);
-    planeVertices[5].texCoords = glm::vec2(0.0f, 1.0f);
-    planeMesh.vertices = planeVertices;
-    for (auto &vertex : planeMesh.vertices) {
-        vertex.texCoords *= planeScale;
-        vertex.position.y = planeHeight;
-    }
-    planeMesh.indices = {0, 1, 2, 3, 4, 5};
+    std::vector<glm::vec3> planeVertices{{1, 0, 1}, {-1, 0, 1}, {-1, 0, -1}, {1, 0, 1}, {-1, 0, -1}, {1, 0, -1}};
+    std::vector<glm::vec2> planeTexCoords{{0, 0}, {1, 0}, {1, 1}, {0, 0}, {1, 1}, {0, 1}};
+    std::vector<glm::vec3> planeNormals{{0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}};
+    planeMesh.AddBuffer<glm::vec3>(0, BufferType::VERTEX_3D, planeVertices);
+    planeMesh.AddBuffer<glm::vec3>(1, BufferType::NORMAL, planeNormals);
+    planeMesh.AddBuffer<glm::vec2>(2, BufferType::TEX_COORD, planeTexCoords);
+    planeModel->SetModelMatrix(glm::translate(planeModel->GetModelMatrix(), glm::vec3(0, planeHeight, 0)));
+    planeMesh.SetIndices({0, 1, 2, 3, 4, 5});
     Texture planeTexture;
     planeTexture.id = Model::TextureFromFile("metal.png", PROJECT_DIR "texture/");
-    planeTexture.type = "texture_diffuse";
-    planeMesh.textures.emplace_back(planeTexture);
+    planeTexture.uniformName = "texture_diffuse0";
+    planeMesh.AddTexture(planeTexture);
     planeMesh.Setup();
     CheckGLError();
     lastTime = glfwGetTime();
@@ -172,13 +161,14 @@ void GLApp::Init() {
     transparent_window = std::make_unique<Model>();
     transparent_window->meshes.emplace_back();
     Mesh &transparent_window_mesh = transparent_window->meshes.back();
-    transparent_window_mesh.vertices = planeVertices;
-    transparent_window_mesh.indices = {0, 1, 2, 3, 4, 5};
+    transparent_window_mesh.AddBuffer(0, BufferType::VERTEX_3D, planeVertices);
+    transparent_window_mesh.AddBuffer(2, BufferType::TEX_COORD, planeTexCoords);
+    transparent_window_mesh.SetIndices({0, 1, 2, 3, 4, 5});
     Texture transparent_window_texture;
     transparent_window_texture.id =
         Model::TextureFromFile("transparent_window.png", PROJECT_DIR "texture/", GL_CLAMP_TO_EDGE);
-    transparent_window_texture.type = "texture_diffuse";
-    transparent_window_mesh.textures.emplace_back(transparent_window_texture);
+    transparent_window_texture.uniformName = "texture_diffuse0";
+    transparent_window_mesh.AddTexture(transparent_window_texture);
     transparent_window_mesh.Setup();
 }
 
@@ -193,28 +183,28 @@ void GLApp::onDrawFrame() {
         glm::perspective(glm::radians(camera.zoom), window_info.width * 1.0f / window_info.height, 0.1f, 1000.0f);
 
     bag_program.Activate();
-    bag_program.SetMat4("viewMat", camera.GetViewMatrix());
-    bag_program.SetMat4("projMat", projection);
-    // if (bagModel) {
-    //     bag_program.SetMat4("modelMat", glm::mat4(1.0f));
-    //     bagModel->Draw(bag_program);
-    // }
+    bag_program.SetMat4("view", camera.GetViewMatrix());
+    bag_program.SetMat4("projection", projection);
+    if (bagModel) {
+        bagModel->Draw(bag_program);
+    }
     if (cubeModel) {
         for (size_t i = 0; i < cubePositions.size(); i++) {
             glm::mat4 model(1.0f);
             model = glm::translate(model, cubePositions.at(i) * 2.0f);
-            bag_program.SetMat4("modelMat", model);
+            cubeModel->SetModelMatrix(model);
             cubeModel->Draw(bag_program);
         }
     }
 
     plane_program.Activate();
-    plane_program.SetMat4("projMat", projection);
-    plane_program.SetMat4("viewMat", camera.GetViewMatrix());
+    plane_program.SetMat4("projection", projection);
+    plane_program.SetMat4("view", camera.GetViewMatrix());
     if (planeModel) {
         glm::mat4 model(1.0f);
         model = glm::scale(model, glm::vec3(planeScale, 1.0f, planeScale));
-        plane_program.SetMat4("modelMat", model);
+        model = glm::translate(model, glm::vec3(0, planeHeight, 0));
+        planeModel->SetModelMatrix(model);
         planeModel->Draw(plane_program);
     }
     if (transparent_window) {
@@ -230,7 +220,7 @@ void GLApp::onDrawFrame() {
             sorted_transparent_windows[glm::length(camera.position - window_pos)] = model;
         }
         for (auto iter = sorted_transparent_windows.rbegin(); iter != sorted_transparent_windows.rend(); iter++) {
-            bag_program.SetMat4("modelMat", iter->second);
+            transparent_window->SetModelMatrix(iter->second);
             transparent_window->Draw(plane_program);
         }
     }

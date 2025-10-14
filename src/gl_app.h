@@ -12,7 +12,7 @@
 
 class GLApp {
   public:
-    explicit GLApp(const WindowInfo& window_info);
+    explicit GLApp(const WindowInfo &window_info);
     virtual ~GLApp();
     void run();
 

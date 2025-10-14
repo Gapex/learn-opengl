@@ -23,6 +23,18 @@ void FileModel::ProcessNode(aiNode *node, const aiScene *scene) {
     }
 }
 
+void Model::SetModelUniformName(const std::string &name) {
+    this->modelMatrixName = name;
+}
+
+void Model::SetModelMatrix(const glm::mat4 &newModelMat) {
+    this->modelMatrix = newModelMat;
+}
+
+const glm::mat4 &Model::GetModelMatrix() const {
+    return modelMatrix;
+}
+
 unsigned int Model::TextureFromFile(const std::string &filename, const std::string &directory, GLint repeatType) {
     const std::string path = directory + '/' + filename;
 
@@ -66,9 +78,8 @@ unsigned int Model::TextureFromFile(const std::string &filename, const std::stri
     return textureID;
 }
 
-std::vector<Texture> FileModel::LoadMaterialTextures(const aiMaterial *material, aiTextureType type,
-                                                     const std::string &typeName) {
-    std::vector<Texture> textures;
+void FileModel::LoadMaterialTextures(Mesh &mesh, const aiMaterial *material, aiTextureType type,
+                                     const std::string &typeName) {
     for (unsigned int i = 0; i < material->GetTextureCount(type); i++) {
         aiString str;
         material->GetTexture(type, i, &str);
@@ -78,49 +89,37 @@ std::vector<Texture> FileModel::LoadMaterialTextures(const aiMaterial *material,
         }
         Texture texture;
         texture.id = TextureFromFile(filename, directory);
-        texture.type = typeName;
+        texture.uniformName = typeName + std::to_string(i);
+        texture.type = GL_TEXTURE_2D;
         texture.path = filename;
-        textures.emplace_back(texture);
-        textures_loaded.insert({filename, textures.back()});
+        mesh.AddTexture(texture);
+        textures_loaded.insert(filename);
     }
-    return textures;
 }
 
 Mesh FileModel::ProcessMesh(const aiMesh *mesh, const aiScene *scene) {
-    std::vector<Vertex> vertices{};
+    std::vector<float> vertices{}, normals{}, uvs{};
     std::vector<unsigned int> indices{};
     std::vector<Texture> textures{};
-    vertices.reserve(mesh->mNumVertices);
+    vertices.reserve(mesh->mNumVertices * 3);
+    normals.reserve(mesh->mNumVertices * 3);
+    uvs.reserve(mesh->mNumVertices * 2);
     for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
-        Vertex vertex{};
-        vertex.position.x = mesh->mVertices[i].x;
-        vertex.position.y = mesh->mVertices[i].y;
-        vertex.position.z = mesh->mVertices[i].z;
+        vertices.push_back(mesh->mVertices[i].x);
+        vertices.push_back(mesh->mVertices[i].y);
+        vertices.push_back(mesh->mVertices[i].z);
         // normals
         if (mesh->HasNormals()) {
-            vertex.normal.x = mesh->mNormals[i].x;
-            vertex.normal.y = mesh->mNormals[i].y;
-            vertex.normal.z = mesh->mNormals[i].z;
+            normals.push_back(mesh->mNormals[i].x);
+            normals.push_back(mesh->mNormals[i].y);
+            normals.push_back(mesh->mNormals[i].z);
         }
         // texture coordinates
         if (mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
         {
-            vertex.texCoords.x = mesh->mTextureCoords[0][i].x;
-            vertex.texCoords.y = mesh->mTextureCoords[0][i].y;
-            // tangent
-            if (mesh->mTangents) {
-                vertex.tangent.x = mesh->mTangents[i].x;
-                vertex.tangent.y = mesh->mTangents[i].y;
-                vertex.tangent.z = mesh->mTangents[i].z;
-            }
-            // bitangent
-            if (mesh->mBitangents) {
-                vertex.bitangent.x = mesh->mBitangents[i].x;
-                vertex.bitangent.y = mesh->mBitangents[i].y;
-                vertex.bitangent.z = mesh->mBitangents[i].z;
-            }
+            uvs.push_back(mesh->mTextureCoords[0][i].x);
+            uvs.push_back(mesh->mTextureCoords[0][i].y);
         }
-        vertices.emplace_back(vertex);
     }
     indices.reserve(mesh->mNumFaces * 3);
     for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
@@ -129,21 +128,21 @@ Mesh FileModel::ProcessMesh(const aiMesh *mesh, const aiScene *scene) {
             indices.push_back(face.mIndices[j]);
         }
     }
+    Mesh result;
+    result.SetIndices(indices);
+    result.AddBuffer(0, BufferType::VERTEX_3D, vertices);
+    if (!normals.empty()) {
+        result.AddBuffer(BufferType::NORMAL, normals);
+    }
+    if (!uvs.empty()) {
+        result.AddBuffer(BufferType::TEX_COORD, uvs);
+    }
     const aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
-    // 1. diffuse maps
-    std::vector<Texture> diffuseMaps = LoadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
-    textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-    // 2. specular maps
-    std::vector<Texture> specularMaps = LoadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
-    textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-    // 3. normal maps
-    std::vector<Texture> normalMaps = LoadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
-    textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-    // 4. height maps
-    std::vector<Texture> heightMaps = LoadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
-    textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
-
-    return {vertices, indices, textures};
+    LoadMaterialTextures(result, material, aiTextureType_DIFFUSE, "texture_diffuse");
+    LoadMaterialTextures(result, material, aiTextureType_SPECULAR, "texture_specular");
+    LoadMaterialTextures(result, material, aiTextureType_HEIGHT, "texture_normal");
+    LoadMaterialTextures(result, material, aiTextureType_AMBIENT, "texture_height");
+    return result;
 }
 
 void FileModel::LoadFromFile(const std::string &path) {
@@ -159,6 +158,7 @@ void FileModel::LoadFromFile(const std::string &path) {
 }
 
 void Model::Draw(Program &shader) {
+    shader.SetMat4(modelMatrixName.c_str(), modelMatrix);
     for (Mesh &mesh : meshes) {
         if (!mesh.IsSetup()) {
             mesh.Setup();
