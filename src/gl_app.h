@@ -26,29 +26,17 @@ class GLApp {
 
     void ProcessInput(GLFWwindow *win);
 
-    virtual void onDrawFrame();
+    virtual void OnDrawFrame();
 
-  private:
+    [[nodiscard]] glm::mat4 GetProjectionMatrix() const;
+
     const glm::vec4 color_bg{0.1f, 0.1f, 0.1f, 1.0f};
-    size_t g_clock = 0;
     size_t frame_freq = 60;
     WindowInfo window_info{};
     GLFWwindow *window{};
 
-    std::vector<glm::vec3> cubePositions{glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 0.0f, -15.0f),
-                                         glm::vec3(-1.5f, -0.0f, -2.5f), glm::vec3(-3.8f, 0.0f, -12.3f),
-                                         glm::vec3(4.4f, -0.0f, -3.5f),  glm::vec3(-1.7f, 0.0f, -7.5f),
-                                         glm::vec3(1.3f, -0.0f, 2.5f),   glm::vec3(5.32f, 0.0f, +7.5f),
-                                         glm::vec3(2.5f, 0.0f, -1.5f),   glm::vec3(-1.3f, 0.0f, -1.5f)};
-    glm::vec3 lightPosition = glm::vec3(5.0f, 5.0f, -5.0f);
-    glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-
-    Program cube_program{}, coord_program{}, light_program{}, bag_program{}, plane_program{};
     double timeDelta{}, lastTime{};
     bool firstMouse = true;
     double lastX{}, lastY{};
-    std::unique_ptr<Model> bagModel{}, cubeModel{}, planeModel{}, transparent_window{};
-    const float planeScale = 100.0f;
-    const float planeHeight = -1.001;
     Camera camera;
 };

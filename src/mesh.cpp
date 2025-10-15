@@ -92,7 +92,7 @@ void Mesh::Draw(const Program &shader) const {
     for (unsigned int i = 0; i < textures.size(); i++) {
         glActiveTexture(GL_TEXTURE0 + i);
         glBindTexture(textures[i].type, textures[i].id);
-        shader.SetInt(textures[i].uniformName.c_str(), i);
+        shader.SetUniform(textures[i].uniformName.c_str(), i);
     }
     glActiveTexture(GL_TEXTURE0);
 

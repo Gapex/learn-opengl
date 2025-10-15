@@ -9,10 +9,9 @@ bool Program::Init() {
     program_id = glCreateProgram();
     for (std::shared_ptr<Shader> &shader : shaders) {
         if (!shader->IsInitialized()) {
-            shader->Init();
-        }
-        if (!shader->Check()) {
-            return false;
+            if (!shader->Init()) {
+                return false;
+            }
         }
         glAttachShader(program_id, shader->GetId());
     }
@@ -40,14 +39,18 @@ bool Program::Check() const {
     return result;
 }
 
-void Program::Activate() const {
+void Program::Use() const {
     if (Check()) {
         glUseProgram(program_id);
     }
 }
 
-void Program::Append(const std::shared_ptr<Shader> &shader) {
+void Program::AddShader(const std::shared_ptr<Shader> &shader) {
     shaders.emplace_back(shader);
+}
+
+void Program::AddShader(GLint shaderType, const std::string &path) {
+    shaders.emplace_back(std::make_shared<Shader>(shaderType, path));
 }
 
 void Program::SetInt(const char *name, int value) const {

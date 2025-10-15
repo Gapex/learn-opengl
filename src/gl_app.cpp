@@ -103,7 +103,7 @@ void GLApp::ProcessInput(GLFWwindow *win) {
 void GLApp::Run() {
     while (!glfwWindowShouldClose(window)) {
         ProcessInput(window);
-        onDrawFrame();
+        OnDrawFrame();
         glfwPollEvents();
         glfwSwapBuffers(window);
     }
@@ -113,113 +113,22 @@ void GLApp::Init() {
     int available_vertex_cnt = -1;
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &available_vertex_cnt);
     LOGD("available vertices count: %d", available_vertex_cnt);
-    bag_program.Append(std::make_shared<Shader>(GL_VERTEX_SHADER, PROJECT_DIR "glsl/bag.vertex.glsl"));
-    bag_program.Append(std::make_shared<Shader>(GL_FRAGMENT_SHADER, PROJECT_DIR "glsl/bag.frag.glsl"));
-    plane_program.Append(std::make_shared<Shader>(GL_VERTEX_SHADER, PROJECT_DIR "glsl/depth_test.vertex.glsl"));
-    plane_program.Append(std::make_shared<Shader>(GL_FRAGMENT_SHADER, PROJECT_DIR "glsl/depth_test.frag.glsl"));
-
-    if (!plane_program.Init()) {
-        LOGE("Failed to initialize depth test program");
-        return;
-    }
-    if (!bag_program.Init()) {
-        LOGE("Failed to initialize bag program");
-        return;
-    }
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    bagModel = std::make_unique<FileModel>(PROJECT_DIR "assets/backpack/backpack.obj");
-    cubeModel = std::make_unique<FileModel>(PROJECT_DIR "assets/cube/cube.obj");
-    Texture wallTexture;
-    wallTexture.id = Model::TextureFromFile("marble.jpg", PROJECT_DIR "texture/");
-    wallTexture.uniformName = "texture_diffuse0";
-    cubeModel->meshes.front().AddTexture(wallTexture);
-
-    planeModel = std::make_unique<Model>();
-    planeModel->meshes.emplace_back();
-    Mesh &planeMesh = planeModel->meshes.back();
-    std::vector<glm::vec3> planeVertices{{1, 0, 1}, {-1, 0, 1}, {-1, 0, -1}, {1, 0, 1}, {-1, 0, -1}, {1, 0, -1}};
-    std::vector<glm::vec2> planeTexCoords{{0, 0}, {1, 0}, {1, 1}, {0, 0}, {1, 1}, {0, 1}};
-    std::vector<glm::vec3> planeNormals{{0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}};
-    planeMesh.AddBuffer<glm::vec3>(0, BufferType::VERTEX_3D, planeVertices);
-    planeMesh.AddBuffer<glm::vec3>(1, BufferType::NORMAL, planeNormals);
-    planeMesh.AddBuffer<glm::vec2>(2, BufferType::TEX_COORD, planeTexCoords);
-    planeModel->SetModelMatrix(glm::translate(planeModel->GetModelMatrix(), glm::vec3(0, planeHeight, 0)));
-    planeMesh.SetIndices({0, 1, 2, 3, 4, 5});
-    Texture planeTexture;
-    planeTexture.id = Model::TextureFromFile("metal.png", PROJECT_DIR "texture/");
-    planeTexture.uniformName = "texture_diffuse0";
-    planeMesh.AddTexture(planeTexture);
-    planeMesh.Setup();
-    CheckGLError();
     lastTime = glfwGetTime();
 
-    transparent_window = std::make_unique<Model>();
-    transparent_window->meshes.emplace_back();
-    Mesh &transparent_window_mesh = transparent_window->meshes.back();
-    transparent_window_mesh.AddBuffer(0, BufferType::VERTEX_3D, planeVertices);
-    transparent_window_mesh.AddBuffer(2, BufferType::TEX_COORD, planeTexCoords);
-    transparent_window_mesh.SetIndices({0, 1, 2, 3, 4, 5});
-    Texture transparent_window_texture;
-    transparent_window_texture.id =
-        Model::TextureFromFile("transparent_window.png", PROJECT_DIR "texture/", GL_CLAMP_TO_EDGE);
-    transparent_window_texture.uniformName = "texture_diffuse0";
-    transparent_window_mesh.AddTexture(transparent_window_texture);
-    transparent_window_mesh.Setup();
 }
 
-void GLApp::onDrawFrame() {
-    const float currentTime = static_cast<float>(glfwGetTime());
+glm::mat4 GLApp::GetProjectionMatrix() const {
+    return glm::perspective(glm::radians(camera.zoom), window_info.width * 1.0f / window_info.height, 0.1f, 1000.0f);
+}
+
+void GLApp::OnDrawFrame() {
+    const auto currentTime = static_cast<float>(glfwGetTime());
     timeDelta = currentTime - lastTime;
     lastTime = currentTime;
     glClearColor(color_bg.x, color_bg.y, color_bg.z, color_bg.w);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    const glm::mat4 projection =
-        glm::perspective(glm::radians(camera.zoom), window_info.width * 1.0f / window_info.height, 0.1f, 1000.0f);
-
-    bag_program.Activate();
-    bag_program.SetMat4("view", camera.GetViewMatrix());
-    bag_program.SetMat4("projection", projection);
-    if (bagModel) {
-        bagModel->Draw(bag_program);
-    }
-    if (cubeModel) {
-        for (size_t i = 0; i < cubePositions.size(); i++) {
-            glm::mat4 model(1.0f);
-            model = glm::translate(model, cubePositions.at(i) * 2.0f);
-            cubeModel->SetModelMatrix(model);
-            cubeModel->Draw(bag_program);
-        }
-    }
-
-    plane_program.Activate();
-    plane_program.SetMat4("projection", projection);
-    plane_program.SetMat4("view", camera.GetViewMatrix());
-    if (planeModel) {
-        glm::mat4 model(1.0f);
-        model = glm::scale(model, glm::vec3(planeScale, 1.0f, planeScale));
-        model = glm::translate(model, glm::vec3(0, planeHeight, 0));
-        planeModel->SetModelMatrix(model);
-        planeModel->Draw(plane_program);
-    }
-    if (transparent_window) {
-        std::map<float, glm::mat4> sorted_transparent_windows;
-        for (size_t i = 0; i < cubePositions.size(); i++) {
-            glm::mat4 model(1.0f);
-            glm::vec3 window_pos = cubePositions[i] * 2.0f;
-            window_pos.y += 0.01f;
-            window_pos.z += 1.5f;
-            window_pos.x += glm::sin(glfwGetTime() * (i + 1));
-            model = glm::translate(model, window_pos);
-            model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-            sorted_transparent_windows[glm::length(camera.position - window_pos)] = model;
-        }
-        for (auto iter = sorted_transparent_windows.rbegin(); iter != sorted_transparent_windows.rend(); iter++) {
-            transparent_window->SetModelMatrix(iter->second);
-            transparent_window->Draw(plane_program);
-        }
-    }
 }
