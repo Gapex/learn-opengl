@@ -14,7 +14,8 @@ class GLApp {
   public:
     explicit GLApp(const WindowInfo &window_info);
     virtual ~GLApp();
-    void run();
+    void Run();
+    virtual void Init();
 
   protected:
     static void framebuffer_size_callback(GLFWwindow *window, int width, int height);
@@ -24,8 +25,6 @@ class GLApp {
     static void scroll_callback(GLFWwindow *window, double x_offset, double y_offset);
 
     void ProcessInput(GLFWwindow *win);
-
-    virtual void Init();
 
     virtual void onDrawFrame();
 

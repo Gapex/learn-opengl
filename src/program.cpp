@@ -67,7 +67,7 @@ void Program::SetVec3(const char *name, glm::vec3 value) const {
 }
 
 GLint Program::GetUniformLocation(const char *name) const {
-    auto location = glGetUniformLocation(program_id, name);
+    const auto location = glGetUniformLocation(program_id, name);
     if (location == -1) {
         LOGE("uniform location not found: %s", name);
         return -1;

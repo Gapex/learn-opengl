@@ -6,8 +6,9 @@ int main() {
     window_info.width = 1100;
     window_info.height = 1000;
     window_info.title = "Learning OpenGL";
-    GLApp app(window_info);
-    app.run();
+    const auto app = std::make_unique<GLApp>(window_info);
+    app->Init();
+    app->Run();
 
     return 0;
 }

@@ -1,12 +1,11 @@
 #pragma once
 
-#include "program.hpp"
 #include <glad/glad.h>
 #include <vector>
 
 class VertexBuffer {
   public:
-    VertexBuffer(unsigned int program);
+    explicit VertexBuffer(unsigned int program);
     virtual ~VertexBuffer() = default;
 
     void Activate() const { glBindVertexArray(vao); }

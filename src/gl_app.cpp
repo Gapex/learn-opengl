@@ -67,8 +67,6 @@ GLApp::GLApp(const WindowInfo &window_info)
         LOGE("Failed to load GLAD");
         return;
     }
-
-    Init();
 }
 
 GLApp::~GLApp() {
@@ -102,7 +100,7 @@ void GLApp::ProcessInput(GLFWwindow *win) {
     }
 }
 
-void GLApp::run() {
+void GLApp::Run() {
     while (!glfwWindowShouldClose(window)) {
         ProcessInput(window);
         onDrawFrame();
