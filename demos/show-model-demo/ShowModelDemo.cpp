@@ -7,6 +7,10 @@ ShowModelDemo::ShowModelDemo(WindowInfo info) : GLApp(info) {}
 
 void ShowModelDemo::Init() {
     GLApp::Init();
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     bag_program.AddShader(GL_VERTEX_SHADER, PROJECT_DIR "glsl/bag.vertex.glsl");
     bag_program.AddShader(GL_FRAGMENT_SHADER, PROJECT_DIR "glsl/bag.frag.glsl");
     plane_program.AddShader(GL_VERTEX_SHADER, PROJECT_DIR "glsl/depth_test.vertex.glsl");

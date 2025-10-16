@@ -22,7 +22,7 @@ bool Shader::Init() {
         return false;
     }
     const char *srcData = src.data();
-    // LOGD("\n%s", srcData);
+    LOGD("\n%s", srcData);
     glShaderSource(shader_id, 1, &srcData, nullptr);
     glCompileShader(shader_id);
     return Check();
@@ -38,7 +38,7 @@ bool Shader::Check() const {
         LOGE("%s\n%s", src.c_str(), infoLog);
         result = false;
     } else {
-        LOGD("shader check pass, type=0x%05x, id=%d", shader_type, shader_id);
+        // LOGD("shader check pass, type=0X%04x, id=%d", shader_type, shader_id);
     }
     return result;
 }
@@ -52,7 +52,7 @@ Shader::operator bool() const {
 }
 
 bool Shader::GetShaderSource() {
-    static std::regex shaderSourceRegex(R"(#version.*void.*main)");
+    static std::regex shaderSourceRegex(R"(#version[\s\S]*?void[\s\S]*?main)");
     std::smatch match;
     if (std::regex_search(src, match, shaderSourceRegex)) {
         return true;

@@ -7,3 +7,13 @@ target_link_libraries(
         ShowModelDemo
         gypgltool
 )
+
+add_executable(
+        HelloTriangle
+        hello-triangle/HelloTriangle.cpp
+        hello-triangle/HelloTriangle.h
+)
+target_link_libraries(
+        HelloTriangle
+        gypgltool
+)
