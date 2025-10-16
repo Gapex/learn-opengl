@@ -10,8 +10,8 @@ target_link_libraries(
 
 add_executable(
         HelloTriangle
-        hello-triangle/HelloTriangle.cpp
-        hello-triangle/HelloTriangle.h
+        hello-triangle-demo/HelloTriangle.cpp
+        hello-triangle-demo/HelloTriangle.h
 )
 target_link_libraries(
         HelloTriangle
@@ -25,5 +25,13 @@ add_executable(
 )
 target_link_libraries(
         glslUniform
+        gypgltool
+)
+add_executable(
+        textureMappingDemo
+        texture-mapping-demo/TextureMappingDemo.cpp
+)
+target_link_libraries(
+        textureMappingDemo
         gypgltool
 )
