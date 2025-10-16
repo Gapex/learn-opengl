@@ -12,12 +12,14 @@ inline std::string GetFileName(const std::filesystem::path &path) {
     do {                                                                                                               \
         fprintf(stdout, "[D] [%s:%d] [%s]: " fmt "\n", GetFileName(__FILE__).c_str(), __LINE__, __func__,              \
                 ##__VA_ARGS__);                                                                                        \
+        fflush(stdout);                                                                                                \
     } while (0)
 
 #define LOGE(fmt, ...)                                                                                                 \
     do {                                                                                                               \
         fprintf(stderr, "[E] [%s:%d] [%s]: " fmt "\n", GetFileName(__FILE__).c_str(), __LINE__, __func__,              \
                 ##__VA_ARGS__);                                                                                        \
+        fflush(stderr);                                                                                                \
     } while (0)
 
 inline void CheckGLError() {

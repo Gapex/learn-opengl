@@ -35,3 +35,20 @@ target_link_libraries(
         textureMappingDemo
         gypgltool
 )
+
+add_executable(
+        glmTransformDemo
+        glm-transform-demo/GLMTransformDemo.cpp
+)
+target_link_libraries(
+        glmTransformDemo
+        gypgltool
+)
+add_executable(
+        cube3DDemo
+        cube-3d-demo/Cube3DDemo.cpp
+)
+target_link_libraries(
+        cube3DDemo
+        gypgltool
+)
