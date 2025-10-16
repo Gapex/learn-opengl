@@ -1,10 +1,10 @@
-#include "HelloTriangle.h"
+#include "ColorChangeTriangle.h"
 
-HelloTriangleApp::HelloTriangleApp(WindowInfo info) : GLApp(info) {}
+ColorChangeTriangle::ColorChangeTriangle(WindowInfo info) : GLApp(info) {}
 
-HelloTriangleApp::~HelloTriangleApp() = default;
+ColorChangeTriangle::~ColorChangeTriangle() = default;
 
-void HelloTriangleApp::Init() {
+void ColorChangeTriangle::Init() {
     GLApp::Init();
 
     m_program.AddShader(GL_VERTEX_SHADER, R"(
@@ -21,8 +21,10 @@ void main() {
 
 out vec4 FragColor;
 
+uniform float time;
+
 void main() {
-    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+    FragColor = vec4(sin(time) + 1.0, cos(time) + 1.0, time, 1.0);
 }
 )"));
 
@@ -41,6 +43,7 @@ void ColorChangeTriangle::OnDrawFrame() {
     GLApp::OnDrawFrame();
 
     m_program.Use();
+    m_program.SetUniform("time", float(glfwGetTime()));
     if (m_triangle_mesh) {
         m_triangle_mesh->Draw(m_program);
     }

@@ -17,3 +17,13 @@ target_link_libraries(
         HelloTriangle
         gypgltool
 )
+
+add_executable(
+        glslUniform
+        glsl-unifrom-demo/ColorChangeTriangle.cpp
+        glsl-unifrom-demo/ColorChangeTriangle.h
+)
+target_link_libraries(
+        glslUniform
+        gypgltool
+)
