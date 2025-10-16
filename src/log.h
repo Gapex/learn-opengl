@@ -1,9 +1,4 @@
-//
-// Created by gao on 2025/10/2.
-//
-
-#ifndef LEARN_OPENGL_LOG_H
-#define LEARN_OPENGL_LOG_H
+#pragma once
 
 #include <cstdio>
 #include <filesystem>
@@ -31,5 +26,3 @@ inline void CheckGLError() {
         LOGE("Failed to initialize OpenGL context: 0x%04x", errCode);
     }
 }
-
-#endif // LEARN_OPENGL_LOG_H

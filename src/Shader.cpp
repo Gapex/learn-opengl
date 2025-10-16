@@ -1,4 +1,7 @@
-#include "Shader.hpp"
+#include <regex>
+#include <fstream>
+
+#include "Shader.h"
 
 Shader::Shader(GLenum shaderType, const std::string &src) : src(src), shader_id(0), shader_type(shaderType) {}
 

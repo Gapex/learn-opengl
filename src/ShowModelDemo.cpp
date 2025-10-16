@@ -1,6 +1,7 @@
 #include <map>
 
 #include "ShowModelDemo.h"
+#include "FileModel.h"
 
 ShowModelDemo::ShowModelDemo(WindowInfo info) : GLApp(info) {}
 

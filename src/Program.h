@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "Shader.hpp"
+#include "Shader.h"
 #include "glm/gtc/type_ptr.hpp"
 
 class Program {
@@ -13,7 +13,7 @@ class Program {
 
     bool Init();
 
-    bool Check() const;
+    [[nodiscard]] bool Check() const;
 
     void Use() const;
 
@@ -21,7 +21,7 @@ class Program {
 
     void AddShader(GLint shaderType, const std::string &path);
 
-    GLuint GetId() const { return program_id; }
+    [[nodiscard]] GLuint GetId() const { return program_id; }
 
     void SetInt(const char *name, int value) const;
 

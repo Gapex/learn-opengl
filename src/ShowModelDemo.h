@@ -1,6 +1,4 @@
-#ifndef LEARN_OPENGL_SHOWMODELDEMO_H
-#define LEARN_OPENGL_SHOWMODELDEMO_H
-
+#include "Model.h"
 #include "GLApp.h"
 
 class ShowModelDemo : public GLApp {
@@ -24,5 +22,3 @@ class ShowModelDemo : public GLApp {
     const float planeScale = 100.0f;
     const float planeHeight = -1.001;
 };
-
-#endif // LEARN_OPENGL_SHOWMODELDEMO_H

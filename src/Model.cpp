@@ -1,4 +1,6 @@
-#include "DataTypes.h"
+#include "Model.h"
+#include "MemoryModel.h"
+#include "FileModel.h"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>

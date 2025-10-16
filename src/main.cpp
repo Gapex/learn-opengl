@@ -1,5 +1,4 @@
 #include "GLApp.h"
-#include "DataTypes.h"
 #include "ShowModelDemo.h"
 
 int main() {

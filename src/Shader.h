@@ -1,8 +1,6 @@
 #pragma once
 
-#include <fstream>
 #include <glad/glad.h>
-#include <regex>
 #include <string>
 
 #include "log.h"
