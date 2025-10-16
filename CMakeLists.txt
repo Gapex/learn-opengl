@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 project(learn-opengl)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_OSX_ARCHITECTURES  "arm64" CACHE STRING "Build architectures for Mac OS X" FORCE)
+set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Build architectures for Mac OS X" FORCE)
 
 set(OPEN_SOURCE_DIR ${CMAKE_SOURCE_DIR}/open_source)
 
@@ -24,7 +24,10 @@ set(STB_IMG_DIR ${OPEN_SOURCE_DIR}/stb-image)
 include_directories(${STB_IMG_DIR})
 #add_definitions(-DSTB_IMAGE_IMPLEMENTATION)
 # set up stb_image end
-include_directories(/opt/homebrew/include)
+include_directories(
+        /opt/homebrew/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
 
 # set up glm
 set(GLM_DIR ${OPEN_SOURCE_DIR}/glm)
@@ -56,3 +59,4 @@ link_directories(/opt/homebrew/lib)
 
 add_definitions(-DPROJECT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/")
 add_subdirectory(src)
+add_subdirectory(demos)

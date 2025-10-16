@@ -3,7 +3,6 @@
 #include <glad/glad.h>
 #include "GLFW/glfw3.h"
 #include "Camera.h"
-#include "Program.h"
 #include "WindowInfo.h"
 
 class GLApp {

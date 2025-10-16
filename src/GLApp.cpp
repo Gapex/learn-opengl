@@ -2,7 +2,7 @@
 #include <thread>
 #include <unordered_map>
 
-#include "GLApp.h"
+#include "../include/GLApp.h"
 #include "log.h"
 #include "stb_image.h"
 

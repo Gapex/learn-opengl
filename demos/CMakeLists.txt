@@ -1,0 +1,9 @@
+add_executable(
+        ShowModelDemo
+        show-model-demo/ShowModelDemo.cpp
+        show-model-demo/ShowModelDemo.h
+)
+target_link_libraries(
+        ShowModelDemo
+        gypgltool
+)

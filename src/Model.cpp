@@ -1,10 +1,10 @@
-#include "Model.h"
-#include "MemoryModel.h"
-#include "FileModel.h"
+#include "../include/Model.h"
+#include "../include/MemoryModel.h"
+#include "../include/FileModel.h"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "log.h"
+#include "../include/log.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"

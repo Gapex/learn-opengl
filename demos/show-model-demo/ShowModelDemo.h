@@ -1,5 +1,5 @@
-#include "Model.h"
-#include "GLApp.h"
+#include "../../include/Model.h"
+#include "../../include/GLApp.h"
 
 class ShowModelDemo : public GLApp {
   public:

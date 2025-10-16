@@ -1,11 +1,11 @@
 file(GLOB PROJECT_SRCS *.cpp)
-add_executable(main
+add_library(gypgltool
         ${PROJECT_SRCS}
         ${GLAD_SRC}
         ${GLFW_SRCS}
 )
 #target_link_libraries(main GL glfw pthread X11 dl Xi)
-target_link_libraries(main opengl32 glfw assimp::assimp)
+target_link_libraries(gypgltool opengl32 glfw assimp::assimp)
 
 if (APPLE)
     message(STATUS "Apple = true")
