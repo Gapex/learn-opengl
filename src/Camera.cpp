@@ -1,5 +1,5 @@
 
-#include "camera.h"
+#include "Camera.h"
 
 Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
     : position(position), up(up), yaw(yaw), pitch(pitch) {

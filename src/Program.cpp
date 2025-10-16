@@ -1,4 +1,4 @@
-#include "program.hpp"
+#include "Program.hpp"
 
 bool Program::Init() {
     if (initialized) {

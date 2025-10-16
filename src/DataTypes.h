@@ -1,6 +1,6 @@
 #pragma once
 
-#include "program.hpp"
+#include "Program.hpp"
 #include "assimp/scene.h"
 #include "glm/glm.hpp"
 

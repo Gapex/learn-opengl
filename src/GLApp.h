@@ -1,14 +1,11 @@
 #pragma once
 
-#include <memory>
-
 #include <glad/glad.h>
 #include "GLFW/glfw3.h"
-#include "camera.h"
-#include "vertex_buffer.hpp"
-#include "program.hpp"
-#include "window_info.h"
-#include "data_types.h"
+#include "Camera.h"
+#include "Program.hpp"
+#include "WindowInfo.h"
+#include "DataTypes.h"
 
 class GLApp {
   public:

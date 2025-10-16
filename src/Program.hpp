@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "shader.hpp"
+#include "Shader.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
 class Program {

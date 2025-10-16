@@ -1,4 +1,4 @@
-#include "data_types.h"
+#include "DataTypes.h"
 
 Mesh::Mesh(Mesh &&other) noexcept {
     buffers = std::move(other.buffers);

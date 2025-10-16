@@ -1,7 +1,7 @@
 #ifndef LEARN_OPENGL_SHOWMODELDEMO_H
 #define LEARN_OPENGL_SHOWMODELDEMO_H
 
-#include "gl_app.h"
+#include "GLApp.h"
 
 class ShowModelDemo : public GLApp {
   public:

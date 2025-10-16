@@ -1,14 +1,10 @@
-#include "gl_app.h"
-
-#include "line_vertex_buffer.h"
-#include "log.h"
-#include "stb_image.h"
-
-#include <chrono>
 #include <iostream>
-#include <map>
 #include <thread>
 #include <unordered_map>
+
+#include "GLApp.h"
+#include "log.h"
+#include "stb_image.h"
 
 void GLApp::framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     GLApp *app = static_cast<GLApp *>(glfwGetWindowUserPointer(window));
