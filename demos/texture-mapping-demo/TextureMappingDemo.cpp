@@ -26,11 +26,26 @@ void main() {
 out vec4 FragColor;
 in vec2 TexCoord;
 
+uniform sampler2D faceTexture;
 uniform sampler2D wallTexture;
+uniform int textureMode;
 
 void main() {
-    FragColor = texture(wallTexture, TexCoord);
+    switch (textureMode) {
+        case 1:
+            FragColor = texture(wallTexture, TexCoord);
+            break;
+        case 2:
+            FragColor = texture(faceTexture, TexCoord);
+            break;
+        case 3:
+            FragColor = mix(texture(wallTexture, TexCoord), texture(faceTexture, TexCoord), 0.5f);
+            break;
+        default:
+            FragColor = vec4(1.0f); // 默认颜色
+    }
 }
+
 )"));
 
     if (!m_program.Init()) {
@@ -43,9 +58,11 @@ void main() {
     std::vector<glm::vec2> triangle_uv{{0, 0}, {1, 0}, {0.5, 1}};
     m_triangle_mesh->AddBuffer(1, BufferType::TEX_COORD, triangle_uv);
     m_triangle_mesh->SetIndices({0, 1, 2});
-    Texture wallTexture;
-    wallTexture.id = Model::TextureFromFile("wall.jpg", PROJECT_DIR "texture");
-    wallTexture.uniformName = "wallTexture";
+    Texture faceTexture("faceTexture", 1);
+    faceTexture.SetTextureId(Model::TextureFromFile("awesomeface.png", PROJECT_DIR "texture"));
+    m_triangle_mesh->AddTexture(faceTexture);
+    Texture wallTexture("wallTexture", 2);
+    wallTexture.SetTextureId(Model::TextureFromFile("wall.jpg", PROJECT_DIR "texture"));
     m_triangle_mesh->AddTexture(wallTexture);
     m_triangle_mesh->Setup();
 }
@@ -54,9 +71,26 @@ void TextureMappingApp::OnDrawFrame() {
     GLApp::OnDrawFrame();
 
     m_program.Use();
+    m_program.SetUniform("textureMode", m_texture_mode);
     if (m_triangle_mesh) {
         m_triangle_mesh->Draw(m_program);
     }
+}
+
+void TextureMappingApp::ProcessInput(GLFWwindow *win) {
+    if (glfwGetKey(win, GLFW_KEY_3) == GLFW_PRESS) {
+        m_texture_mode = 3;
+        return;
+    }
+    if (glfwGetKey(win, GLFW_KEY_1) == GLFW_PRESS) {
+        m_texture_mode = 1;
+        return;
+    }
+    if (glfwGetKey(win, GLFW_KEY_2) == GLFW_PRESS) {
+        m_texture_mode = 2;
+        return;
+    }
+    GLApp::ProcessInput(win);
 }
 
 int main() {

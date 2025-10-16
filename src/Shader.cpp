@@ -22,7 +22,7 @@ bool Shader::Init() {
         return false;
     }
     const char *srcData = src.data();
-    LOGD("\n%s", srcData);
+    // LOGD("\n%s", srcData);
     glShaderSource(shader_id, 1, &srcData, nullptr);
     glCompileShader(shader_id);
     return Check();

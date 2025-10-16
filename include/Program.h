@@ -47,6 +47,7 @@ class Program {
     template<>
     void SetUniform(const char *name, const unsigned int &value) const {
         glUniform1ui(GetUniformLocation(name), value);
+        LOGD("set uniform (%s) as (%d)", name, value);
     }
 
     template<>

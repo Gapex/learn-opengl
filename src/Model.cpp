@@ -89,11 +89,9 @@ void FileModel::LoadMaterialTextures(Mesh &mesh, const aiMaterial *material, aiT
         if (textures_loaded.find(filename) != textures_loaded.end()) {
             continue;
         }
-        Texture texture;
-        texture.id = TextureFromFile(filename, directory);
-        texture.uniformName = typeName + std::to_string(i);
-        texture.type = GL_TEXTURE_2D;
-        texture.path = filename;
+        Texture texture(typeName + std::to_string(i), 0);
+        texture.SetPath(filename);
+        texture.SetType(GL_TEXTURE_2D);
         mesh.AddTexture(texture);
         textures_loaded.insert(filename);
     }

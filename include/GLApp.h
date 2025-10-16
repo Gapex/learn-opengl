@@ -19,7 +19,7 @@ class GLApp {
 
     static void scroll_callback(GLFWwindow *window, double x_offset, double y_offset);
 
-    void ProcessInput(GLFWwindow *win);
+    virtual void ProcessInput(GLFWwindow *win);
 
     virtual void OnDrawFrame();
 

@@ -89,14 +89,25 @@ void Mesh::Setup() {
 }
 
 void Mesh::Draw(const Program &shader) const {
-    for (unsigned int i = 0; i < textures.size(); i++) {
-        glActiveTexture(GL_TEXTURE0 + i);
-        glBindTexture(textures[i].type, textures[i].id);
-        shader.SetUniform(textures[i].uniformName.c_str(), i);
-    }
-    glActiveTexture(GL_TEXTURE0);
-
     glBindVertexArray(vao);
+
+    for (const auto &texture : textures) {
+        glActiveTexture(GL_TEXTURE0 + texture.unit);
+        glBindTexture(texture.type, texture.id);
+        shader.SetInt(texture.uniformName.c_str(), static_cast<int>(texture.unit));
+        LOGD("bind texture(id=%d, type=0X%04X, loc='%s') to texture unit %d", texture.id, texture.type,
+             texture.uniformName.c_str(), texture.unit);
+        GLint boundId;
+        glGetIntegerv(GL_TEXTURE_BINDING_2D, &boundId);
+        LOGD("Texture %s: unit=%d, boundId=%d (expected %d)",
+             texture.uniformName.c_str(), texture.unit, boundId, texture.id);
+    }
+
     glDrawElements(GL_TRIANGLES, indices.Size(), GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
+
+    for (GLuint i = 0; i < textures.size(); i++) {
+        glActiveTexture(GL_TEXTURE0 + i);
+        glBindTexture(textures[i].type, 0);
+    }
 }
