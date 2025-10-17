@@ -52,3 +52,11 @@ target_link_libraries(
         cube3DDemo
         gypgltool
 )
+add_executable(
+        lightingDemo
+        lighting-demo/LightingDemo.cpp
+)
+target_link_libraries(
+        lightingDemo
+        gypgltool
+)
