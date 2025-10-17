@@ -3,6 +3,7 @@ add_library(gypgltool
         ${PROJECT_SRCS}
         ${GLAD_SRC}
         ${GLFW_SRCS}
+        ${IMGUI_SRCS}
 )
 #target_link_libraries(main GL glfw pthread X11 dl Xi)
 target_link_libraries(gypgltool opengl32 glfw assimp::assimp)

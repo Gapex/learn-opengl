@@ -60,3 +60,11 @@ target_link_libraries(
         lightingDemo
         gypgltool
 )
+add_executable(
+        materialDemo
+        material-demo/MaterialDemo.cpp
+)
+target_link_libraries(
+        materialDemo
+        gypgltool
+)

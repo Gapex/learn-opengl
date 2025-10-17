@@ -7,6 +7,8 @@
 #include "Shader.h"
 #include "glm/gtc/type_ptr.hpp"
 
+#define SET_UNIFORM(program, variable) program.SetUniform(#variable, variable);
+
 class Program {
   public:
     Program() = default;

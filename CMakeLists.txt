@@ -37,7 +37,7 @@ include_directories(${GLM_DIR})
 # set up imgui
 set(IMGUI_DIR ${OPEN_SOURCE_DIR}/imgui)
 include_directories(${IMGUI_DIR}/ ${IMGUI_DIR}/backends)
-file(GLOB IMGUI_SRCS ${IMGUI_DIR}/*.cpp)
+file(GLOB IMGUI_SRCS ${IMGUI_DIR}/*.cpp ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp)
 #message(FATAL_ERROR ${IMGUI_SRCS})
 # end set up imgui
 
