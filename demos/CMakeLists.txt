@@ -76,3 +76,11 @@ target_link_libraries(
         lightingMapsDemo
         gypgltool
 )
+add_executable(
+        lightingCasterDemo
+        lighting-caster-demo/LightingCasterDemo.cpp
+)
+target_link_libraries(
+        lightingCasterDemo
+        gypgltool
+)

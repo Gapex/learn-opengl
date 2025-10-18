@@ -54,7 +54,7 @@ GLApp::GLApp(const WindowInfo &window_info)
     }
     glfwSetWindowUserPointer(window, this);
     glfwMakeContextCurrent(window);
-    // glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
 
