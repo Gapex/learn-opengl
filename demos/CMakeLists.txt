@@ -68,3 +68,11 @@ target_link_libraries(
         materialDemo
         gypgltool
 )
+add_executable(
+        lightingMapsDemo
+        lighting-maps-demo/LightingMapsDemo.cpp
+)
+target_link_libraries(
+        lightingMapsDemo
+        gypgltool
+)
